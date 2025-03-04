@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { transformProfile, transformFitnessGoal, transformWorkoutStat } from '../transformers/userTransformers';
 import prisma from '../lib/prisma';
+import Joi from 'joi';
 
 // Get user profile
 export const getProfile = async (req: Request, res: Response) => {
@@ -38,6 +39,20 @@ export const getProfile = async (req: Request, res: Response) => {
   }
 };
 
+// Validation schema for profile updates
+const profileValidationSchema = Joi.object({
+  weight: Joi.number().positive().required().messages({
+    'number.base': 'Weight must be a number.',
+    'number.positive': 'Weight must be a positive number.',
+    'any.required': 'Weight is required.'
+  }),
+  height: Joi.number().positive().required().messages({
+    'number.base': 'Height must be a number.',
+    'number.positive': 'Height must be a positive number.',
+    'any.required': 'Height is required.'
+  }),
+});
+
 // Update user profile
 export const updateProfile = async (req: Request, res: Response) => {
   try {
@@ -56,6 +71,12 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Validate weight and height
+    const { error } = profileValidationSchema.validate({ weight, height });
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
     }
 
     // Build update data

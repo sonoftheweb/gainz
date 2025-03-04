@@ -92,6 +92,16 @@ services:
       - ./services/user/.env
     command: npm run dev
 
+  # Mailpit service for capturing emails
+  mailpit:
+    image: axllent/mailpit
+    container_name: gainz-mailpit
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
+    networks:
+      - gainz-network
+
 networks:
   gainz-network:
     driver: bridge

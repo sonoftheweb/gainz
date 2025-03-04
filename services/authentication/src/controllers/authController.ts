@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
-
-// Added this comment to test hot reloading
 import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import prisma from '../lib/prisma';
+import transporter from '../config/mailConfig';
 
 // Helper function for signing JWT tokens
 const signToken = (payload: object, expiresIn: string | number = '24h'): string => {
@@ -221,12 +220,23 @@ export const forgotPassword = async (req: Request, res: Response) => {
       }
     });
 
-    // In a real application, you would send an email with the reset link
-    // For now, we'll just return the token in the response for testing purposes
-    res.status(200).json({
-      message: 'Password reset token generated',
-      resetToken
-    });
+    // Send password reset email
+    try {
+      const resetLink = `http://localhost:3001/reset-password?token=${resetToken}`;
+      await transporter.sendMail({
+        from: 'no-reply@gainz.com',
+        to: email,
+        subject: 'Password Reset Request',
+        text: `You requested a password reset. Click here to reset your password: ${resetLink}`,
+        html: `<p>You requested a password reset. Click <a href="${resetLink}">here</a> to reset your password.</p>`
+      });
+      res.status(200).json({
+        message: 'Password reset email sent'
+      });
+    } catch (emailError) {
+      console.error('Error sending email:', emailError);
+      res.status(500).json({ message: 'Error sending email' });
+    }
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ message: 'Server error' });

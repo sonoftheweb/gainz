@@ -9,19 +9,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enum for fitness levels
+enum FitnessLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// Enum for gender
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  OTHER
+}
+
+// User model
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String
+  refreshToken      String?
+  resetPasswordToken String?
+  resetPasswordExpiry DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  profiles          Profile[]
+  fitnessGoals      FitnessGoal[]
+  workoutStats      WorkoutStat[]
+
+  @@map("users")
+  @@ignore
+}
+
 // User profile information
 model Profile {
   id             String   @id @default(uuid())
   userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id]) @ignore
   firstName      String?
   lastName       String?
   bio            String?
   profilePicture String?
   dateOfBirth    DateTime?
-  gender         String?
+  gender         Gender?
   weight         Float?   // in kg
   height         Float?   // in cm
-  fitnessLevel   String?  // beginner, intermediate, advanced, etc.
+  fitnessLevel   FitnessLevel?  // beginner, intermediate, advanced.
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -51,6 +86,7 @@ model Follow {
 model FitnessGoal {
   id          String   @id @default(uuid())
   userId      String
+  user        User     @relation(fields: [userId], references: [id]) @ignore
   title       String
   description String?
   targetDate  DateTime?
@@ -65,6 +101,7 @@ model FitnessGoal {
 model WorkoutStat {
   id          String   @id @default(uuid())
   userId      String
+  user        User     @relation(fields: [userId], references: [id]) @ignore
   workout     String
   duration    Int      // in minutes
   caloriesBurned Int?
