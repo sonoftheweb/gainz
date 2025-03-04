@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package user;
+
+service UserService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse) {}
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse) {}
+  rpc GetFollowers(GetFollowersRequest) returns (GetFollowersResponse) {}
+  rpc GetFollowing(GetFollowingRequest) returns (GetFollowingResponse) {}
+}
+
+message GetProfileRequest {
+  string userId = 1;
+}
+
+message Profile {
+  string id = 1;
+  string userId = 2;
+  string firstName = 3;
+  string lastName = 4;
+  string bio = 5;
+  string profilePicture = 6;
+  string dateOfBirth = 7;
+  string gender = 8;
+  float weight = 9;
+  float height = 10;
+  string fitnessLevel = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
+}
+
+message GetProfileResponse {
+  bool success = 1;
+  Profile profile = 2;
+  string error = 3;
+}
+
+message UpdateProfileRequest {
+  string userId = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string bio = 4;
+  string profilePicture = 5;
+  string dateOfBirth = 6;
+  string gender = 7;
+  float weight = 8;
+  float height = 9;
+  string fitnessLevel = 10;
+}
+
+message UpdateProfileResponse {
+  bool success = 1;
+  Profile profile = 2;
+  string error = 3;
+}
+
+message GetFollowersRequest {
+  string userId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message Follower {
+  string id = 1;
+  Profile profile = 2;
+  string createdAt = 3;
+}
+
+message GetFollowersResponse {
+  bool success = 1;
+  repeated Follower followers = 2;
+  int32 total = 3;
+  string error = 4;
+}
+
+message GetFollowingRequest {
+  string userId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message Following {
+  string id = 1;
+  Profile profile = 2;
+  string createdAt = 3;
+}
+
+message GetFollowingResponse {
+  bool success = 1;
+  repeated Following following = 2;
+  int32 total = 3;
+  string error = 4;
+}

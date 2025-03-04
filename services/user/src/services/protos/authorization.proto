@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package authorization;
+
+service AuthorizationService {
+  rpc GetUserByToken(GetUserByTokenRequest) returns (GetUserByTokenResponse) {}
+}
+
+message GetUserByTokenRequest {
+  string token = 1;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string createdAt = 3;
+  string updatedAt = 4;
+}
+
+message GetUserByTokenResponse {
+  bool success = 1;
+  User user = 2;
+  string error = 3;
+}

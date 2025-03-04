@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:14
+    container_name: gainz-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gainz
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gainz-network
+
+  # Gateway service (Golang)
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile.dev
+    container_name: gainz-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./services/gateway:/app
+    depends_on:
+      - postgres
+      - authentication
+      - authorization
+      - user
+    networks:
+      - gainz-network
+
+  # Authentication service
+  authentication:
+    build:
+      context: ./services/authentication
+      dockerfile: Dockerfile.dev
+    container_name: gainz-authentication
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./services/authentication:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    networks:
+      - gainz-network
+    env_file:
+      - ./services/authentication/.env
+    command: npm run dev
+
+  # Authorization service
+  authorization:
+    build:
+      context: ./services/authorization
+      dockerfile: Dockerfile.dev
+    container_name: gainz-authorization
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./services/authorization:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    networks:
+      - gainz-network
+    env_file:
+      - ./services/authorization/.env
+    command: npm run dev
+
+  # User service
+  user:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile.dev
+    container_name: gainz-user
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./services/user:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - authorization
+    networks:
+      - gainz-network
+    env_file:
+      - ./services/user/.env
+    command: npm run dev
+
+networks:
+  gainz-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

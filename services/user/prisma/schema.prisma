@@ -1,0 +1,76 @@
+// This is your Prisma schema file for the User service
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User profile information
+model Profile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  firstName      String?
+  lastName       String?
+  bio            String?
+  profilePicture String?
+  dateOfBirth    DateTime?
+  gender         String?
+  weight         Float?   // in kg
+  height         Float?   // in cm
+  fitnessLevel   String?  // beginner, intermediate, advanced, etc.
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  followers      Follow[] @relation("following")
+  following      Follow[] @relation("follower")
+
+  @@map("profiles")
+}
+
+// Follow relationship
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  follower    Profile  @relation("follower", fields: [followerId], references: [id])
+  following   Profile  @relation("following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// User fitness goals
+model FitnessGoal {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  targetDate  DateTime?
+  achieved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("fitness_goals")
+}
+
+// User workout stats
+model WorkoutStat {
+  id          String   @id @default(uuid())
+  userId      String
+  workout     String
+  duration    Int      // in minutes
+  caloriesBurned Int?
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("workout_stats")
+}

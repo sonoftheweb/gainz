@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:14
+    container_name: gainz-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gainz
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gainz-network
+
+  # Gateway service (Golang)
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    container_name: gainz-gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - postgres
+      - authentication
+      - authorization
+      - user
+    networks:
+      - gainz-network
+
+  # Authentication service
+  authentication:
+    build:
+      context: ./services/authentication
+      dockerfile: Dockerfile
+    container_name: gainz-authentication
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    networks:
+      - gainz-network
+    env_file:
+      - ./services/authentication/.env
+
+  # Authorization service
+  authorization:
+    build:
+      context: ./services/authorization
+      dockerfile: Dockerfile
+    container_name: gainz-authorization
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres
+    networks:
+      - gainz-network
+    env_file:
+      - ./services/authorization/.env
+
+  # User service
+  user:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    container_name: gainz-user
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
+      - authorization
+    networks:
+      - gainz-network
+    env_file:
+      - ./services/user/.env
+
+networks:
+  gainz-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

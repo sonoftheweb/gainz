@@ -1,0 +1,16 @@
+FROM golang:1.20-alpine
+
+WORKDIR /app
+
+COPY go.mod .
+
+RUN go mod download
+
+COPY . .
+
+# Install air for hot reloading
+RUN go install github.com/cosmtrek/air@latest
+
+EXPOSE 80
+
+CMD ["air", "-c", ".air.toml"]
