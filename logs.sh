@@ -34,7 +34,7 @@ show_logs() {
 # Show logs for all services
 if [ "$FOLLOW" = true ]; then
   echo "Showing and following logs for all services. Press Ctrl+C to exit."
-  docker-compose -f docker-compose.dev.yml logs --follow
+  docker compose -f docker-compose.dev.yml logs --follow
 else
   # Show logs for each service individually with different colors
   show_logs "gateway" $MAGENTA 10

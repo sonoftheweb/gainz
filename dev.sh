@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Stop and remove any existing containers
-docker-compose down
+docker compose down
 
 # Start development environment
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 
 # Show API address
 echo ""
@@ -13,4 +13,4 @@ echo "📝 Access the API at: http://localhost"
 echo ""
 
 # Show logs
-docker-compose -f docker-compose.dev.yml logs -f
+docker compose -f docker-compose.dev.yml logs -f

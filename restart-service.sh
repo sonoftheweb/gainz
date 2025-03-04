@@ -30,7 +30,7 @@ esac
 echo -e "${GREEN}Restarting ${SERVICE} service...${NC}"
 
 # Restart the service
-docker-compose -f docker-compose.dev.yml restart $SERVICE
+docker compose -f docker-compose.dev.yml restart $SERVICE
 
 # Show logs from the restarted service
 echo -e "${GREEN}Showing logs for ${SERVICE} service:${NC}"
