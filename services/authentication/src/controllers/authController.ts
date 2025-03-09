@@ -29,7 +29,7 @@ const catchAsync = (fn: Function) => {
  *     tags:
  *       - Authentication
  *     summary: Register a new user
- *     description: Creates a new user account with the provided email and password
+ *     description: Creates a new user account with the provided email and password, and sends an email verification code
  *     requestBody:
  *       required: true
  *       content:
@@ -54,7 +54,7 @@ const catchAsync = (fn: Function) => {
  *                 format: password
  *                 description: Confirmation of the password (must match password)
  *             example:
- *               email: "user@example.com"
+ *               email: "john@muscles.com"
  *               password: "Password123!"
  *               confirm_password: "Password123!"
  *     responses:
@@ -67,7 +67,7 @@ const catchAsync = (fn: Function) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   example: User registered successfully
+ *                   example: User registered successfully. Please check your email for a verification code.
  *                 token:
  *                   type: string
  *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -75,7 +75,7 @@ const catchAsync = (fn: Function) => {
  *                   type: string
  *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *       400:
- *         description: Bad request - User already exists or validation error
+ *         description: Bad request - Validation errors or user already exists
  *         content:
  *           application/json:
  *             schema:
@@ -84,6 +84,16 @@ const catchAsync = (fn: Function) => {
  *                 message:
  *                   type: string
  *                   example: User already exists
+ *             examples:
+ *               userExists:
+ *                 value:
+ *                   message: User already exists
+ *               missingFields:
+ *                 value:
+ *                   message: Email, password, and password confirmation are required
+ *               passwordMismatch:
+ *                 value:
+ *                   message: Passwords do not match
  *       500:
  *         description: Server error
  *         content:
