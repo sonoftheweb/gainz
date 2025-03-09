@@ -13,11 +13,28 @@ model User {
   id                String    @id @default(uuid())
   email             String    @unique
   password          String
-  refreshToken      String?
-  resetPasswordToken String?
+  tokenVersion      Int       @default(0)
+  lastLogin         DateTime?
+  refreshToken      String?   // Keeping for backward compatibility
+  resetPasswordToken String?  // Keeping for backward compatibility
   resetPasswordExpiry DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  tokens            Token[]   // Relation to Token model
 
   @@map("users")
+}
+
+// Token model for better token management
+model Token {
+  id          String    @id @default(uuid())
+  token       String    @unique
+  type        String    // "refresh" or "reset"
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId])
+  @@map("tokens")
 }

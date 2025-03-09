@@ -1,20 +1,93 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
-import jwt, { SignOptions } from 'jsonwebtoken';
+// Only need jwt for verification, not signing
+import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
-import transporter from '../config/mailConfig';
+import tokenService from '../services/tokenService';
+import emailService from '../services/emailService';
+import logger from '../utils/logger';
+import { 
+  BadRequestError, 
+  UnauthorizedError, 
+  NotFoundError, 
+  ConflictError, 
+  InternalServerError 
+} from '../utils/errors';
 
-// Helper function for signing JWT tokens
-const signToken = (payload: object, expiresIn: string | number = '24h'): string => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is not defined in environment variables');
-  }
-  
-  // Using a type assertion to avoid TypeScript errors with expiresIn
-  return jwt.sign(payload, secret, { expiresIn } as jwt.SignOptions);
+// Middleware to handle controller errors
+const catchAsync = (fn: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
 };
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Register a new user
+ *     description: Creates a new user account with the provided email and password
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: User's password (min 8 characters)
+ *             example:
+ *               email: "user@example.com"
+ *               password: "Password123!"
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 refreshToken:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       400:
+ *         description: Bad request - User already exists or validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User already exists
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
 // Register a new user
 export const register = async (req: Request, res: Response) => {
   try {
@@ -41,23 +114,11 @@ export const register = async (req: Request, res: Response) => {
       }
     });
 
-    // Generate JWT token
-    const token = signToken(
-      { userId: user.id }, 
-      process.env.JWT_EXPIRES_IN || '24h'
-    );
+    // Generate JWT access token using token service
+    const token = tokenService.generateAccessToken({ userId: user.id });
 
-    // Generate refresh token
-    const refreshToken = signToken(
-      { userId: user.id }, 
-      process.env.JWT_REFRESH_EXPIRES_IN || '7d'
-    );
-
-    // Save refresh token to database
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { refreshToken }
-    });
+    // Generate refresh token using token service (already stores in DB)
+    const refreshToken = await tokenService.generateRefreshToken(user.id);
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -91,23 +152,11 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT token
-    const token = signToken(
-      { userId: user.id }, 
-      process.env.JWT_EXPIRES_IN || '24h'
-    );
+    // Generate JWT access token using token service
+    const token = tokenService.generateAccessToken({ userId: user.id });
 
-    // Generate refresh token
-    const refreshToken = signToken(
-      { userId: user.id }, 
-      process.env.JWT_REFRESH_EXPIRES_IN || '7d'
-    );
-
-    // Save refresh token to database
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { refreshToken }
-    });
+    // Generate refresh token using token service (already stores in DB)
+    const refreshToken = await tokenService.generateRefreshToken(user.id);
 
     res.status(200).json({
       message: 'Login successful',
@@ -172,11 +221,8 @@ export const refreshToken = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Invalid or expired refresh token' });
     }
 
-    // Generate new access token
-    const newToken = signToken(
-      { userId: user.id }, 
-      process.env.JWT_EXPIRES_IN || '24h'
-    );
+    // Generate new access token using token service
+    const newToken = tokenService.generateAccessToken({ userId: user.id });
 
     res.status(200).json({
       message: 'Token refreshed successfully',
@@ -202,11 +248,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Generate reset token
-    const resetToken = signToken(
-      { userId: user.id }, 
-      '1h'
-    );
+    // Generate reset token using token service
+    const resetToken = tokenService.generateAccessToken({ userId: user.id }, '1h');
 
     // Calculate expiry time (1 hour from now)
     const resetPasswordExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
@@ -222,14 +265,12 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     // Send password reset email
     try {
-      const resetLink = `http://localhost:3001/reset-password?token=${resetToken}`;
-      await transporter.sendMail({
-        from: 'no-reply@gainz.com',
-        to: email,
-        subject: 'Password Reset Request',
-        text: `You requested a password reset. Click here to reset your password: ${resetLink}`,
-        html: `<p>You requested a password reset. Click <a href="${resetLink}">here</a> to reset your password.</p>`
-      });
+      // Use the emailService to send password reset email
+      await emailService.sendPasswordResetEmail(
+        email,
+        user.email, // Using email as username since we don't have a username field
+        resetToken
+      );
       res.status(200).json({
         message: 'Password reset email sent'
       });

@@ -40,7 +40,6 @@ export const initializeGrpcServer = () => {
         console.error('Failed to start gRPC server:', error);
         return;
       }
-      server.start();
       console.log(`User gRPC server running on port ${port}`);
     }
   );
