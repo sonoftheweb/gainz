@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { EmailTemplate } from '../templates/emails/baseEmail';
 import { getPasswordResetEmail } from '../templates/emails/passwordReset';
+import { getEmailVerificationEmail } from '../templates/emails/emailVerification';
 import transporter from '../config/mailConfig';
 import logger from '../utils/logger';
 import { InternalServerError } from '../utils/errors';
@@ -48,6 +49,20 @@ class EmailService {
     const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
     
     const template = getPasswordResetEmail(username, resetLink);
+    await this.sendEmail(to, template);
+  }
+  
+  /**
+   * Send an email verification email with OTP
+   */
+  async sendEmailVerificationOTP(
+    to: string,
+    otp: string
+  ): Promise<void> {
+    // Extract username from email (everything before @)
+    const username = to.split('@')[0];
+    
+    const template = getEmailVerificationEmail(username, otp);
     await this.sendEmail(to, template);
   }
   

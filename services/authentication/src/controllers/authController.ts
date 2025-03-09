@@ -13,6 +13,7 @@ import {
   ConflictError, 
   InternalServerError 
 } from '../utils/errors';
+import { Prisma } from '@prisma/client';
 
 // Middleware to handle controller errors
 const catchAsync = (fn: Function) => {
@@ -38,6 +39,7 @@ const catchAsync = (fn: Function) => {
  *             required:
  *               - email
  *               - password
+ *               - confirm_password
  *             properties:
  *               email:
  *                 type: string
@@ -47,9 +49,14 @@ const catchAsync = (fn: Function) => {
  *                 type: string
  *                 format: password
  *                 description: User's password (min 8 characters)
+ *               confirm_password:
+ *                 type: string
+ *                 format: password
+ *                 description: Confirmation of the password (must match password)
  *             example:
  *               email: "user@example.com"
  *               password: "Password123!"
+ *               confirm_password: "Password123!"
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -89,9 +96,26 @@ const catchAsync = (fn: Function) => {
  *                   example: Server error
  */
 // Register a new user
+/**
+ * Generate a random 6-digit OTP
+ */
+const generateOTP = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, confirm_password } = req.body;
+    
+    // Validate that password and confirm_password are provided
+    if (!email || !password || !confirm_password) {
+      return res.status(400).json({ message: 'Email, password, and password confirmation are required' });
+    }
+    
+    // Check if passwords match
+    if (password !== confirm_password) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -102,17 +126,26 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Generate OTP for email verification
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
+    // Create user with email verification code
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        emailVerificationCode: otp,
+        emailVerificationExpiry: otpExpiry
       }
     });
+
+    // Send verification email with OTP
+    await emailService.sendEmailVerificationOTP(email, otp);
 
     // Generate JWT access token using token service
     const token = tokenService.generateAccessToken({ userId: user.id });
@@ -121,7 +154,7 @@ export const register = async (req: Request, res: Response) => {
     const refreshToken = await tokenService.generateRefreshToken(user.id);
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'User registered successfully. Please check your email for a verification code.',
       token,
       refreshToken
     });
@@ -323,5 +356,123 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-// Test comment Mon Mar  3 00:25:30 AST 2025
-// Test comment Mon Mar  3 10:40:37 PM AST 2025
+/**
+ * @swagger
+ * /api/auth/verify-email:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Verify user email with OTP
+ *     description: Verifies a user's email address using the OTP sent during registration
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *               otp:
+ *                 type: string
+ *                 description: One-time password sent to user's email
+ *             example:
+ *               email: "user@example.com"
+ *               otp: "123456"
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Email verified successfully
+ *       400:
+ *         description: Bad request - Invalid OTP or email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or expired verification code
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+
+    // Validate required fields
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and verification code are required' });
+    }
+
+    // Find the user
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    // Check if user exists
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if user is already verified
+    if (user.isEmailVerified) {
+      return res.status(200).json({ message: 'Email is already verified' });
+    }
+
+    // Check if OTP exists and is still valid
+    if (
+      !user.emailVerificationCode ||
+      !user.emailVerificationExpiry ||
+      user.emailVerificationCode !== otp ||
+      new Date() > user.emailVerificationExpiry
+    ) {
+      return res.status(400).json({ message: 'Invalid or expired verification code' });
+    }
+
+    // Update user as verified and clear verification data
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isEmailVerified: true,
+        emailVerificationCode: null,
+        emailVerificationExpiry: null
+      }
+    });
+
+    res.status(200).json({ message: 'Email verified successfully' });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

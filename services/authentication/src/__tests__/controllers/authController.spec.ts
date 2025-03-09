@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
+import { Prisma } from '@prisma/client';
 
 // Mock dependencies
 jest.mock('bcrypt', () => ({
@@ -8,12 +9,15 @@ jest.mock('bcrypt', () => ({
   compare: jest.fn().mockResolvedValue(true),
 }));
 
+jest.mock('../../services/emailService', () => emailServiceMock);
+
 // Make sure these mocks are imported before importing the controller
 import { prismaMock } from '../mocks/prismaMock';
 import tokenServiceMock from '../mocks/tokenServiceMock';
+import emailServiceMock from '../mocks/emailServiceMock';
 
 // Import the controller after mocks are imported
-import { register } from '../../controllers/authController';
+import { register, verifyEmail } from '../../controllers/authController';
 
 
 
@@ -32,7 +36,8 @@ describe('Authentication Controller', () => {
       mockRequest = {
         body: {
           email: 'test@example.com',
-          password: 'Password123!'
+          password: 'Password123!',
+          confirm_password: 'Password123!'
         }
       };
       mockResponse = {
@@ -48,6 +53,9 @@ describe('Authentication Controller', () => {
       // Setup mock for Prisma create (create user)
       prismaMock.user.create.mockResolvedValue({
         id: 'mock-user-id',
+        isEmailVerified: false,
+        emailVerificationCode: '123456',
+        emailVerificationExpiry: new Date(Date.now() + 10 * 60 * 1000),
         email: 'test@example.com',
         password: 'hashed-password',
         createdAt: new Date(),
@@ -127,31 +135,210 @@ describe('Authentication Controller', () => {
       expect(jsonMock).toHaveBeenCalledWith({ message: 'Server error' });
     });
 
-    it('should validate required fields', async () => {
+    it('should validate required fields for registration', async () => {
       // Missing email
-      mockRequest.body = { password: 'Password123!' };
+      mockRequest.body = { password: 'Password123!', confirm_password: 'Password123!' };
       
-      // The controller will try to use undefined email, which will cause an error in the try-catch block
       await register(mockRequest as Request, mockResponse as Response);
       
-      // This should result in a 500 error from the catch block
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ message: 'Server error' });
+      // Should return 400 with proper error message
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: 'Email, password, and password confirmation are required' });
       
       // Reset mocks
       jest.clearAllMocks();
       
       // Missing password
-      mockRequest.body = { email: 'test@example.com' };
-      
-      // Set up Prisma mock for the second test
-      prismaMock.user.findUnique.mockResolvedValue(null);
+      mockRequest.body = { email: 'test@example.com', confirm_password: 'Password123!' };
       
       await register(mockRequest as Request, mockResponse as Response);
       
-      // The controller will try to hash an undefined password, causing an error and a 500 response
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ message: 'Server error' });
+      // Should return 400 with proper error message
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: 'Email, password, and password confirmation are required' });
+      
+      // Reset mocks
+      jest.clearAllMocks();
+      
+      // Missing confirm_password
+      mockRequest.body = { email: 'test@example.com', password: 'Password123!' };
+      
+      await register(mockRequest as Request, mockResponse as Response);
+      
+      // Should return 400 with proper error message
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: 'Email, password, and password confirmation are required' });
+    });
+    
+    it('should validate password match', async () => {
+      // Passwords don't match
+      mockRequest.body = {
+        email: 'test@example.com',
+        password: 'Password123!',
+        confirm_password: 'DifferentPassword123!'
+      };
+      
+      await register(mockRequest as Request, mockResponse as Response);
+      
+      // Should return 400 with proper error message
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: 'Passwords do not match' });
+      
+      // Ensure user is not created
+      expect(prismaMock.user.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyEmail', () => {
+    let mockRequest: Partial<Request>;
+    let mockResponse: Partial<Response>;
+    let jsonMock: jest.Mock;
+
+    beforeEach(() => {
+      // Reset mocks before each test
+      jest.clearAllMocks();
+      
+      // Setup request and response mocks
+      jsonMock = jest.fn();
+      mockRequest = {
+        body: {
+          email: 'test@example.com',
+          otp: '123456'
+        }
+      };
+      mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jsonMock
+      };
+    });
+
+    it('should verify email successfully', async () => {
+      // Mock user retrieval with unverified email
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'mock-user-id',
+        email: 'test@example.com',
+        password: 'hashed-password',
+        isEmailVerified: false,
+        emailVerificationCode: '123456',
+        emailVerificationExpiry: new Date(Date.now() + 10 * 60 * 1000), // future date
+        tokenVersion: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLogin: null,
+        refreshToken: null,
+        resetPasswordToken: null,
+        resetPasswordExpiry: null
+      });
+
+      // Mock user update
+      prismaMock.user.update.mockResolvedValue({
+        id: 'mock-user-id',
+        email: 'test@example.com',
+        password: 'hashed-password',
+        isEmailVerified: true,
+        emailVerificationCode: null,
+        emailVerificationExpiry: null,
+        tokenVersion: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLogin: null,
+        refreshToken: null,
+        resetPasswordToken: null,
+        resetPasswordExpiry: null
+      });
+
+      // Call the controller
+      await verifyEmail(mockRequest as Request, mockResponse as Response);
+
+      // Verify the user was updated correctly
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: 'mock-user-id' },
+        data: {
+          isEmailVerified: true,
+          emailVerificationCode: null,
+          emailVerificationExpiry: null
+        }
+      });
+
+      // Verify response
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(jsonMock).toHaveBeenCalledWith({
+        message: 'Email verified successfully'
+      });
+    });
+
+    it('should return error for invalid or expired OTP', async () => {
+      // Mock user retrieval with invalid OTP
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'mock-user-id',
+        email: 'test@example.com',
+        password: 'hashed-password',
+        isEmailVerified: false,
+        emailVerificationCode: '654321', // Different OTP than what's passed
+        emailVerificationExpiry: new Date(Date.now() + 10 * 60 * 1000),
+        tokenVersion: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLogin: null,
+        refreshToken: null,
+        resetPasswordToken: null,
+        resetPasswordExpiry: null
+      });
+
+      // Call the controller
+      await verifyEmail(mockRequest as Request, mockResponse as Response);
+
+      // Verify response
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        message: 'Invalid or expired verification code'
+      });
+    });
+
+    it('should return error for already verified email', async () => {
+      // Mock user retrieval with already verified email
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'mock-user-id',
+        email: 'test@example.com',
+        password: 'hashed-password',
+        isEmailVerified: true, // Already verified
+        emailVerificationCode: null,
+        emailVerificationExpiry: null,
+        tokenVersion: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLogin: null,
+        refreshToken: null,
+        resetPasswordToken: null,
+        resetPasswordExpiry: null
+      });
+
+      // Call the controller
+      await verifyEmail(mockRequest as Request, mockResponse as Response);
+
+      // Verify response
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(jsonMock).toHaveBeenCalledWith({
+        message: 'Email is already verified'
+      });
+    });
+
+    it('should validate required fields for verification', async () => {
+      // Missing email
+      mockRequest.body = { otp: '123456' };
+      await verifyEmail(mockRequest as Request, mockResponse as Response);
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        message: 'Email and verification code are required'
+      });
+
+      // Missing OTP
+      mockRequest.body = { email: 'test@example.com' };
+      await verifyEmail(mockRequest as Request, mockResponse as Response);
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        message: 'Email and verification code are required'
+      });
     });
   });
 });
