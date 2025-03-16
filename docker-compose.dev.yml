@@ -13,6 +13,25 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - gainz-network
+      
+  # Database Migration Service
+  database:
+    build:
+      context: ./services/database
+      dockerfile: docker/Dockerfile
+    container_name: gainz-database
+    volumes:
+      - ./services/database:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/gainz?schema=gainz
+      - PORT=3010
+    ports:
+      - "3010:3010"
+    depends_on:
+      - postgres
+    networks:
+      - gainz-network
 
   # Gateway service (Golang)
   gateway:

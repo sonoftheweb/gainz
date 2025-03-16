@@ -1,0 +1,131 @@
+// Master schema for the database service - single source of truth for all migrations
+// This schema combines all models from authentication, authorization, and user services
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with all fields needed by different services
+model User {
+  id                     String        @id @default(uuid())
+  email                  String        @unique
+  password               String
+  isEmailVerified        Boolean       @default(false)
+  emailVerificationCode  String?
+  emailVerificationExpiry DateTime?
+  tokenVersion           Int           @default(0)
+  lastLogin              DateTime?
+  refreshToken           String?
+  resetPasswordToken     String?
+  resetPasswordExpiry    DateTime?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  
+  // Relations
+  profiles               Profile[]
+  fitnessGoals           FitnessGoal[]
+  workoutStats           WorkoutStat[]
+  tokens                 Token[]
+  followedBy             Follow[]      @relation("Following")
+  following              Follow[]      @relation("Follower")
+
+  @@map("users")
+}
+
+// Token model from authentication service
+model Token {
+  id          String    @id @default(uuid())
+  token       String    @unique
+  type        String    // "refresh" or "reset"
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId])
+  @@map("tokens")
+}
+
+// Fitness Level enum from user service
+enum FitnessLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// Gender enum from user service
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  OTHER
+}
+
+// Profile model from user service
+model Profile {
+  id           String       @id @default(uuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id])
+  firstName    String?
+  lastName     String?
+  bio          String?
+  gender       Gender?
+  dateOfBirth  DateTime?
+  fitnessLevel FitnessLevel @default(BEGINNER)
+  avatarUrl    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("profiles")
+}
+
+// FitnessGoal model from user service
+model FitnessGoal {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  title       String
+  description String?
+  targetDate  DateTime?
+  isAchieved  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("fitness_goals")
+}
+
+// WorkoutStat model from user service
+model WorkoutStat {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  workoutType    String
+  duration       Int      // in minutes
+  caloriesBurned Int?
+  distance       Float?   // in kilometers
+  date           DateTime
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("workout_stats")
+}
+
+// Follow model from user service
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id])
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}

@@ -1,0 +1,365 @@
+{
+  "info": {
+    "_postman_id": "1742089440912",
+    "name": "Gainz Authentication API",
+    "description": "API documentation for the Gainz Authentication Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register a new user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Creates a new user account with the provided email and password, and sends an email verification code",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@muscles.com\",\n  \"password\": \"Password123!\",\n  \"confirm_password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Creates a new user account with the provided email and password, and sends an email verification code",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john@muscles.com\",\n  \"password\": \"Password123!\",\n  \"confirm_password\": \"Password123!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "201",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"message\": \"User registered successfully. Please check your email for a verification code.\",\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+            },
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Creates a new user account with the provided email and password, and sends an email verification code",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john@muscles.com\",\n  \"password\": \"Password123!\",\n  \"confirm_password\": \"Password123!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "400",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"message\": \"User already exists\"\n}"
+            },
+            {
+              "name": "500 Internal Server Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Creates a new user account with the provided email and password, and sends an email verification code",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john@muscles.com\",\n  \"password\": \"Password123!\",\n  \"confirm_password\": \"Password123!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "500",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"message\": \"Server error\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify user email with OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-email"
+              ]
+            },
+            "description": "Verifies a user's email address using the OTP sent during registration",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/verify-email",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "verify-email"
+                  ]
+                },
+                "description": "Verifies a user's email address using the OTP sent during registration",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "200",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"message\": \"Email verified successfully\"\n}"
+            },
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/verify-email",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "verify-email"
+                  ]
+                },
+                "description": "Verifies a user's email address using the OTP sent during registration",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "400",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"message\": \"Invalid or expired verification code\"\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/verify-email",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "verify-email"
+                  ]
+                },
+                "description": "Verifies a user's email address using the OTP sent during registration",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "404",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"message\": \"User not found\"\n}"
+            },
+            {
+              "name": "500 Internal Server Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/verify-email",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "verify-email"
+                  ]
+                },
+                "description": "Verifies a user's email address using the OTP sent during registration",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "500",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"message\": \"Server error\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    }
+  ]
+}

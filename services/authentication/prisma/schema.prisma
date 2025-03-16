@@ -1,4 +1,7 @@
-// This is your Prisma schema file for the Authentication service
+// ⚠️ WARNING: DO NOT USE THIS SCHEMA FOR MIGRATIONS ⚠️
+// This schema is for Prisma client generation only.
+// All migrations should be run from the database service.
+// This ensures consistent schema management across all services.
 
 generator client {
   provider = "prisma-client-js"
