@@ -486,3 +486,4 @@ export const verifyEmail = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+// Test comment Sat Mar 15 10:26:14 PM ADT 2025
