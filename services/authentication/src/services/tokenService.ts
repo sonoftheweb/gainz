@@ -4,7 +4,13 @@ import { UnauthorizedError, InternalServerError } from '../utils/errors';
 import logger from '../utils/logger';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Use the same JWT secret that the authorization service uses
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_in_production';
+
+// Ensure JWT_SECRET is available
+if (!JWT_SECRET) {
+  console.error('JWT_SECRET environment variable is not set. Using default value.');
+}
 
 interface TokenPayload {
   userId: string;

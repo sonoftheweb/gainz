@@ -111,6 +111,27 @@ services:
       - ./services/user/.env
     command: npm run dev
 
+  # Image Upload service
+  image-upload:
+    build:
+      context: ./services/image-upload
+      dockerfile: Dockerfile.dev
+    container_name: gainz-image-upload
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./services/image-upload:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - authorization
+      - minio
+    networks:
+      - gainz-network
+    env_file:
+      - ./services/image-upload/.env
+    command: npm run dev
+
   # Mailpit service for capturing emails
   mailpit:
     image: axllent/mailpit
@@ -121,9 +142,31 @@ services:
     networks:
       - gainz-network
 
+  # MinIO service - S3 compatible object storage
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: gainz-minio
+    ports:
+      - "9000:9000"  # API port
+      - "9001:9001"  # Console port
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    networks:
+      - gainz-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
 networks:
   gainz-network:
     driver: bridge
 
 volumes:
   postgres_data:
+  minio_data:

@@ -349,6 +349,7 @@ generate_docs() {
   echo -e "${CYAN}Authentication: http://localhost:3001/api-docs${NC}"
   echo -e "${CYAN}Authorization: http://localhost:3002/api-docs${NC}"
   echo -e "${CYAN}User:          http://localhost:3003/api-docs${NC}"
+  echo -e "${CYAN}Image Upload:   http://localhost:3004/api-docs${NC}"
   echo -e "${GREEN}====================================================${NC}"
   echo ""
   echo -e "${YELLOW}Note: The services must be running for the documentation to be accessible.${NC}"
@@ -397,6 +398,9 @@ generate_postman_collection() {
         ;;
       user)
         PORT="3003"
+        ;;
+      image-upload)
+        PORT="3004"
         ;;
       *)
         PORT="3001"
@@ -523,6 +527,14 @@ async function generatePostmanCollection() {
     for (const method in swaggerDefinition.paths[path]) {
       const endpoint = swaggerDefinition.paths[path][method];
       
+      // Determine content type from Swagger
+      let contentType = "application/json";
+      
+      // Check if endpoint consumes multipart/form-data
+      if (endpoint.consumes && endpoint.consumes.includes('multipart/form-data')) {
+        contentType = "multipart/form-data";
+      }
+      
       // Create Postman request
       const request = {
         name: endpoint.summary || `${method.toUpperCase()} ${path}`,
@@ -531,7 +543,7 @@ async function generatePostmanCollection() {
           header: [
             {
               key: "Content-Type",
-              value: "application/json"
+              value: contentType
             }
           ],
           url: {
@@ -545,17 +557,50 @@ async function generatePostmanCollection() {
       };
       
       // Add request body if it exists
-      if (endpoint.requestBody && endpoint.requestBody.content && endpoint.requestBody.content['application/json']) {
-        const schema = endpoint.requestBody.content['application/json'].schema;
-        request.request.body = {
-          mode: "raw",
-          raw: JSON.stringify(extractExample(schema) || {}, null, 2),
-          options: {
-            raw: {
-              language: "json"
+      if (endpoint.requestBody && endpoint.requestBody.content) {
+        // Handle multipart/form-data (file uploads)
+        if (endpoint.requestBody.content['multipart/form-data']) {
+          const schema = endpoint.requestBody.content['multipart/form-data'].schema;
+          const formItems = [];
+          
+          // Process form fields from schema properties
+          if (schema && schema.properties) {
+            for (const propName in schema.properties) {
+              const prop = schema.properties[propName];
+              let type = "text";
+              
+              // If this is a file upload field
+              if (prop.format === "binary" || prop.type === "file") {
+                type = "file";
+              }
+              
+              formItems.push({
+                key: propName,
+                type: type,
+                src: [],
+                description: prop.description || ""
+              });
             }
           }
-        };
+          
+          request.request.body = {
+            mode: "formdata",
+            formdata: formItems
+          };
+        }
+        // Handle standard JSON bodies
+        else if (endpoint.requestBody.content['application/json']) {
+          const schema = endpoint.requestBody.content['application/json'].schema;
+          request.request.body = {
+            mode: "raw",
+            raw: JSON.stringify(extractExample(schema) || {}, null, 2),
+            options: {
+              raw: {
+                language: "json"
+              }
+            }
+          };
+        }
       }
       
       // Add query parameters if they exist

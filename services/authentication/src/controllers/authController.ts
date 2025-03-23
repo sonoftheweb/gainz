@@ -5,21 +5,12 @@ import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
 import tokenService from '../services/tokenService';
 import emailService from '../services/emailService';
-import logger from '../utils/logger';
-import { 
-  BadRequestError, 
-  UnauthorizedError, 
-  NotFoundError, 
-  ConflictError, 
-  InternalServerError 
-} from '../utils/errors';
-import { Prisma } from '@prisma/client';
 
-// Middleware to handle controller errors
-const catchAsync = (fn: Function) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    fn(req, res, next).catch(next);
-  };
+/**
+ * Generate a random 6-digit OTP
+ */
+const generateOTP = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 /**
@@ -105,14 +96,6 @@ const catchAsync = (fn: Function) => {
  *                   type: string
  *                   example: Server error
  */
-// Register a new user
-/**
- * Generate a random 6-digit OTP
- */
-const generateOTP = (): string => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, confirm_password } = req.body;
@@ -174,7 +157,73 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-// Login user
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Login user
+ *     description: Authenticates a user with email and password, returns access and refresh tokens
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: User's password
+ *             example:
+ *               email: "john@muscles.com"
+ *               password: "Password123!"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Login successful
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 refreshToken:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       400:
+ *         description: Bad request - Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid credentials
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -212,7 +261,62 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// Logout user
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Logout user
+ *     description: Invalidates the user's refresh token to log them out
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh token to invalidate
+ *             example:
+ *               refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Logout successful
+ *       400:
+ *         description: Bad request - Invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid token
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
 export const logout = async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
@@ -239,7 +343,73 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
-// Refresh token
+/**
+ * @swagger
+ * /api/auth/refresh-token:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Refresh access token
+ *     description: Issues a new access token using a valid refresh token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Valid refresh token issued during login or registration
+ *             example:
+ *               refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Token refreshed successfully
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       401:
+ *         description: Unauthorized - Missing or invalid refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Refresh token required
+ *       403:
+ *         description: Forbidden - Expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or expired refresh token
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
 export const refreshToken = async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
@@ -277,7 +447,61 @@ export const refreshToken = async (req: Request, res: Response) => {
   }
 };
 
-// Forgot password
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Request password reset
+ *     description: Sends a password reset email to the user's email address
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *             example:
+ *               email: "john@muscles.com"
+ *     responses:
+ *       200:
+ *         description: Password reset email sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Password reset email sent
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
@@ -327,7 +551,66 @@ export const forgotPassword = async (req: Request, res: Response) => {
   }
 };
 
-// Reset password
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Reset password
+ *     description: Resets the user's password using the token sent via email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Password reset token received by email
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 description: New password (min 8 characters)
+ *             example:
+ *               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *               newPassword: "NewPassword123!"
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Password reset successful
+ *       400:
+ *         description: Bad request - Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or expired token
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
 export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { token, newPassword } = req.body;
@@ -366,6 +649,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 /**
  * @swagger
  * /api/auth/verify-email:
@@ -486,4 +770,3 @@ export const verifyEmail = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-// Test comment Sat Mar 15 10:26:14 PM ADT 2025
