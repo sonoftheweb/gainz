@@ -1,16 +1,23 @@
 # Gateway Service Configuration
+# Each service defines a URL and prefix for routing
 services:
   # Authentication Service
   authentication:
+    # Base URL of the authentication service
     url: http://authentication:3001
+    # Path prefix for authentication-related endpoints
     prefix: /api/auth
     
   # Authorization Service
   authorization:
+    # Base URL of the authorization service
     url: http://authorization:3002
+    # Path prefix for authorization-related endpoints
     prefix: /api/authorize
     
   # User Service
   user:
+    # Base URL of the user service
     url: http://user:3003
+    # Path prefix for user-related endpoints
     prefix: /api/users

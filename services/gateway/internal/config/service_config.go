@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -55,12 +56,26 @@ func LoadServicesConfig(configPath string) (*ServicesConfig, error) {
 		return nil, fmt.Errorf("no services defined in config file")
 	}
 
+	// Process services - apply environment variable overrides if available
 	for name, svc := range config.Services {
+		// Check if base config is valid
 		if svc.URL == "" {
 			return nil, fmt.Errorf("service %s is missing URL", name)
 		}
 		if svc.Prefix == "" {
 			return nil, fmt.Errorf("service %s is missing prefix", name)
+		}
+		
+		// Look for an environment variable override for this service URL
+		// Format: SERVICENAME_SERVICE_URL (e.g., AUTHENTICATION_SERVICE_URL)
+		envVarName := fmt.Sprintf("%s_SERVICE_URL", name)
+		envVarName = strings.ToUpper(envVarName)
+		
+		if envURL := os.Getenv(envVarName); envURL != "" {
+			// Override the URL from the environment variable
+			svc.URL = envURL
+			config.Services[name] = svc
+			log.Printf("Using environment override for %s service: %s", name, envURL)
 		}
 	}
 

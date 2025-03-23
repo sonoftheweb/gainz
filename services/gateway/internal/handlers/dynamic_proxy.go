@@ -52,18 +52,22 @@ func (h *DynamicProxyHandler) proxyRequest(c *gin.Context, targetURL, prefix str
 	originalPath := c.Request.URL.Path
 	originalMethod := c.Request.Method
 	
-	log.Printf("Gateway received request: %s %s for service at %s", originalMethod, originalPath, targetURL)
+	log.Printf("[Gateway] Received request: %s %s for service at %s with prefix %s", 
+		originalMethod, originalPath, targetURL, prefix)
 
 	// Parse the target URL
 	target, err := url.Parse(targetURL)
 	if err != nil {
-		log.Printf("Error parsing target URL: %v", err)
+		log.Printf("[Gateway] Error parsing target URL: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gateway configuration error"})
 		return
 	}
 
-	// Extract the path parameter
-	pathParam := c.Param("path")
+	// Forward the original path as-is without stripping the prefix
+	// This ensures that requests to /api/auth/login are forwarded to the service with the full path
+	forwardPath := originalPath
+	
+	log.Printf("[Gateway] Forward path: %s", forwardPath)
 	
 	// Create director function to modify the request
 	director := func(req *http.Request) {
@@ -71,19 +75,20 @@ func (h *DynamicProxyHandler) proxyRequest(c *gin.Context, targetURL, prefix str
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
 		
-		// Get the request path relative to the service prefix
-		// For example, if prefix is "/api/auth" and the request is "/api/auth/login",
-		// then req.URL.Path should be "/login"
-		if pathParam == "" || pathParam == "/" {
-			req.URL.Path = "/"
-		} else {
-			req.URL.Path = pathParam
+		// Set the forward path calculated above
+		req.URL.Path = forwardPath
+		
+		// Copy all headers to preserve authentication information, etc.
+		for headerKey, headerValues := range c.Request.Header {
+			for _, value := range headerValues {
+				req.Header.Add(headerKey, value)
+			}
 		}
 		
 		// Set the Host header to the target host
 		req.Host = target.Host
 		
-		log.Printf("Proxying request: %s %s -> %s://%s%s", 
+		log.Printf("[Gateway] Proxying request: %s %s -> %s://%s%s", 
 			originalMethod, originalPath, req.URL.Scheme, req.URL.Host, req.URL.Path)
 	}
 

@@ -117,37 +117,80 @@ show_logs() {
 # Restart service function
 restart_service() {
   local SERVICE=$1
+  local NO_CACHE=false
+  local ALL_SERVICES=false
+  
+  # Check for --no-cache flag
+  if [ "$1" == "--no-cache" ]; then
+    NO_CACHE=true
+    SERVICE=$2
+  elif [ "$2" == "--no-cache" ]; then
+    NO_CACHE=true
+  fi
   
   # Check if service name is provided
   if [ -z "$SERVICE" ]; then
-    echo -e "${RED}Error: Please specify a service name.${NC}"
-    echo "Usage: ./gainz.sh restart [service-name]"
-    echo "Available services: gateway, authentication, authorization, user"
-    return 1
+    # If no service specified, we'll restart all services
+    ALL_SERVICES=true
+    echo -e "${YELLOW}No service specified, restarting all services...${NC}"
+  else
+    # Validate service name when one is provided
+    case $SERVICE in
+      gateway|authentication|authorization|user)
+        # Valid service
+        ;;
+      *)
+        echo -e "${RED}Error: Invalid service name '${SERVICE}'.${NC}"
+        echo "Usage: ./gainz.sh restart [service-name] [--no-cache]"
+        echo "Options:"
+        echo "  --no-cache    Rebuild the service(s) without using Docker cache"
+        echo "Available services: gateway, authentication, authorization, user"
+        echo "If no service is specified, all services will be restarted."
+        return 1
+        ;;
+    esac
   fi
   
-  # Validate service name
-  case $SERVICE in
-    gateway|authentication|authorization|user)
-      # Valid service
-      ;;
-    *)
-      echo -e "${RED}Error: Invalid service name '${SERVICE}'.${NC}"
-      echo "Available services: gateway, authentication, authorization, user"
-      return 1
-      ;;
-  esac
+  if [ "$NO_CACHE" = true ]; then
+    # Bring down the entire stack first to ensure clean rebuilds
+    echo -e "${YELLOW}Stopping all services...${NC}"
+    docker compose -f docker-compose.dev.yml down
+    
+    if [ "$ALL_SERVICES" = true ]; then
+      echo -e "${GREEN}Rebuilding all services without cache...${NC}"
+      # Rebuild all services without cache
+      docker compose -f docker-compose.dev.yml build --no-cache
+    else
+      echo -e "${GREEN}Rebuilding ${SERVICE} service without cache...${NC}"
+      # Rebuild the specific service without cache
+      docker compose -f docker-compose.dev.yml build --no-cache $SERVICE
+    fi
+    
+    # Start the entire stack again
+    echo -e "${YELLOW}Starting all services...${NC}"
+    docker compose -f docker-compose.dev.yml up -d
+  else
+    if [ "$ALL_SERVICES" = true ]; then
+      echo -e "${GREEN}Restarting all services...${NC}"
+      # Restart all services
+      docker compose -f docker-compose.dev.yml restart
+    else
+      echo -e "${GREEN}Restarting ${SERVICE} service...${NC}"
+      # Restart the specific service
+      docker compose -f docker-compose.dev.yml restart $SERVICE
+    fi
+  fi
   
-  echo -e "${GREEN}Restarting ${SERVICE} service...${NC}"
-  
-  # Restart the service
-  docker compose -f docker-compose.dev.yml restart $SERVICE
-  
-  # Show logs from the restarted service
-  echo -e "${GREEN}Showing logs for ${SERVICE} service:${NC}"
-  docker logs gainz-$SERVICE --tail=10
-  
-  echo -e "${GREEN}${SERVICE} service has been restarted.${NC}"
+  # Show logs based on whether we're handling a specific service or all services
+  if [ "$ALL_SERVICES" = true ]; then
+    echo -e "${GREEN}All services have been restarted.${NC}"
+    echo -e "${YELLOW}Use './gainz.sh logs' to view logs.${NC}"
+  else
+    # Show logs from the restarted service
+    echo -e "${GREEN}Showing logs for ${SERVICE} service:${NC}"
+    docker logs gainz-$SERVICE --tail=10
+    echo -e "${GREEN}${SERVICE} service has been restarted.${NC}"
+  fi
 }
 
 # Test development mode function
