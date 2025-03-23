@@ -1,0 +1,12 @@
+{
+  "id": "1742702196106-env",
+  "name": "Gainz API Environment",
+  "values": [
+    {
+      "key": "gatewayUrl",
+      "value": "http://localhost:80",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

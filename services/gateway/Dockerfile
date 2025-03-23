@@ -27,6 +27,10 @@ COPY --from=builder /app/gateway .
 # Copy .env file
 COPY .env .
 
+# Create config directory and copy YAML configuration
+RUN mkdir -p /root/config
+COPY --from=builder /app/config/services.yaml /root/config/
+
 EXPOSE 80
 
 CMD ["./gateway"]

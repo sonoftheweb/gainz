@@ -24,8 +24,8 @@ func main() {
 	router.Use(middleware.Logger())
 	router.Use(middleware.SetupCORS())
 
-	// Create handlers
-	proxyHandler := handlers.NewProxyHandler(cfg)
+	// Create dynamic proxy handler
+	proxyHandler := handlers.NewDynamicProxyHandler(cfg)
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
@@ -34,21 +34,8 @@ func main() {
 		})
 	})
 
-	// API routes
-	api := router.Group("/api")
-	{
-		// Authentication service routes
-		auth := api.Group("/auth")
-		auth.Any("/*path", proxyHandler.HandleAuth())
-
-		// Authorization service routes
-		authorize := api.Group("/authorize")
-		authorize.Any("/*path", proxyHandler.HandleAuthorize())
-
-		// User service routes
-		users := api.Group("/users")
-		users.Any("/*path", proxyHandler.HandleUsers())
-	}
+	// Register all service routes from configuration
+	proxyHandler.RegisterRoutes(router)
 
 	// Start server
 	serverAddr := fmt.Sprintf(":%d", cfg.Port)

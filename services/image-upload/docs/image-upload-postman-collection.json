@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "1742699740682",
+    "_postman_id": "1742702195932",
     "name": "Gainz Image-upload API",
     "description": "API documentation for the Image Upload service of Gainz fitness social network",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -20,11 +20,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/images/upload",
+              "raw": "{{gatewayUrl}}/api/images/api/images/upload",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
+                "api",
+                "images",
                 "api",
                 "images",
                 "upload"
@@ -61,11 +63,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/upload",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     "upload"
@@ -108,11 +112,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/upload",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     "upload"
@@ -155,11 +161,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/upload",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     "upload"
@@ -202,11 +210,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/upload",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     "upload"
@@ -251,11 +261,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/images",
+              "raw": "{{gatewayUrl}}/api/images/api/images",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
+                "api",
+                "images",
                 "api",
                 "images"
               ]
@@ -274,11 +286,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images",
+                  "raw": "{{gatewayUrl}}/api/images/api/images",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images"
                   ]
@@ -303,11 +317,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images",
+                  "raw": "{{gatewayUrl}}/api/images/api/images",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images"
                   ]
@@ -332,11 +348,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images",
+                  "raw": "{{gatewayUrl}}/api/images/api/images",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images"
                   ]
@@ -363,11 +381,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/images/:id",
+              "raw": "{{gatewayUrl}}/api/images/api/images/:id",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
+                "api",
+                "images",
                 "api",
                 "images",
                 ":id"
@@ -387,11 +407,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/:id",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     ":id"
@@ -417,11 +439,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/:id",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     ":id"
@@ -447,11 +471,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/:id",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     ":id"
@@ -477,11 +503,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/:id",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     ":id"
@@ -507,11 +535,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/images/:id",
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
+                    "api",
+                    "images",
                     "api",
                     "images",
                     ":id"
@@ -533,8 +563,8 @@
   ],
   "variable": [
     {
-      "key": "baseUrl",
-      "value": "http://localhost:3004",
+      "key": "gatewayUrl",
+      "value": "http://localhost:80",
       "type": "string"
     }
   ]

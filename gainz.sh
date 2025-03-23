@@ -382,12 +382,66 @@ run_tests() {
 generate_postman_collection() {
   local SERVICE=$1
   local PORT=$2
+  local COMBINED_ONLY=${3:-false}
   
-  # Set defaults if not provided
+  # If no service specified, generate for all services with Swagger docs
   if [ -z "$SERVICE" ]; then
-    SERVICE="authentication"
+    echo -e "${GREEN}Generating Postman collections for all services...${NC}"
+    
+    # Define services with potential API docs
+    local API_SERVICES=("authentication" "authorization" "user" "image-upload")
+    local SUCCESSFUL_COLLECTIONS=()
+    
+    # Make sure docs directory exists
+    mkdir -p "$SCRIPT_DIR/docs"
+    
+    # Generate Postman collection for each service
+    for service in "${API_SERVICES[@]}"; do
+      # Check if the service directory exists and is running
+      if [ -d "$SCRIPT_DIR/services/$service" ] && docker ps | grep -q "gainz-$service"; then
+        echo -e "${CYAN}Generating Postman collection for $service service...${NC}"
+        
+        # Try to generate the collection
+        generate_single_collection "$service"
+        
+        # Check if the collection was created
+        if [ -f "$SCRIPT_DIR/docs/${service}-postman-collection.json" ]; then
+          SUCCESSFUL_COLLECTIONS+=("$SCRIPT_DIR/docs/${service}-postman-collection.json")
+        fi
+      fi
+    done
+    
+    # Combine all successful collections into a single file
+    if [ ${#SUCCESSFUL_COLLECTIONS[@]} -gt 0 ]; then
+      echo -e "${CYAN}Combining collections into a single file...${NC}"
+      create_combined_collection "${SUCCESSFUL_COLLECTIONS[@]}"
+      
+      # Remove individual files if combined-only mode is enabled
+      if [ "$COMBINED_ONLY" = true ]; then
+        echo -e "${YELLOW}Removing individual collection files...${NC}"
+        rm -f "${SUCCESSFUL_COLLECTIONS[@]}"
+      fi
+    else
+      echo -e "${RED}No collections were successfully generated.${NC}"
+    fi
+    
+    echo -e "${GREEN}Postman collection generation complete!${NC}"
+    return 0
   fi
   
+  # Handle single service case by calling the single collection generator
+  generate_single_collection "$SERVICE" "$PORT"
+  
+  # Return success
+  return 0
+}
+
+# Generate a single service's Postman collection
+generate_single_collection() {
+  local SERVICE=$1
+  local PORT=$2
+  
+  # Handle single service case
   if [ -z "$PORT" ]; then
     case $SERVICE in
       authentication)
@@ -547,9 +601,10 @@ async function generatePostmanCollection() {
             }
           ],
           url: {
-            raw: `{{baseUrl}}${path}`,
-            host: ["{{baseUrl}}"],
-            path: path.split('/').filter(p => p)
+            // Map service names to their gateway path prefixes
+            raw: `{{gatewayUrl}}${getGatewayPath(serviceName, path)}`,
+            host: ["{{gatewayUrl}}"],
+            path: getGatewayPath(serviceName, path).split('/').filter(p => p)
           },
           description: endpoint.description || "",
         },
@@ -676,8 +731,8 @@ async function generatePostmanCollection() {
   // Add variables
   collection.variable = [
     {
-      key: "baseUrl",
-      value: `http://localhost:${servicePort}`,
+      key: "gatewayUrl",
+      value: "http://localhost:80",
       type: "string"
     }
   ];
@@ -704,6 +759,22 @@ function getStatusMessage(statusCode) {
   };
   
   return statusMessages[statusCode] || 'Unknown';
+}
+
+// Helper function to get the gateway path for a service
+function getGatewayPath(serviceName, path) {
+  switch(serviceName) {
+    case 'authentication':
+      return path; // The authentication paths already include /api/auth/
+    case 'authorization':
+      return path; // Authorization paths already include /api/authorize/
+    case 'user':
+      return '/api/users' + path;
+    case 'image-upload':
+      return '/api/images' + path;
+    default:
+      return '/api/' + serviceName + path;
+  }
 }
 
 // Helper function to extract example from schema
@@ -762,6 +833,137 @@ EOF
   echo -e "${GREEN}Postman collection generated at $SCRIPT_DIR/docs/${SERVICE}-postman-collection.json${NC}"
 }
 
+# Create a combined Postman collection from individual service collections
+create_combined_collection() {
+  local COLLECTIONS=($@)
+  local OUTPUT_FILE="$SCRIPT_DIR/docs/gainz-api-collection.json"
+  
+  echo -e "${CYAN}Creating combined collection from ${#COLLECTIONS[@]} services...${NC}"
+  
+  # Create a temporary JavaScript file to combine collections
+  local TEMP_JS_FILE=$(mktemp)
+  cat > "$TEMP_JS_FILE" << 'EOF'
+// Script to combine multiple Postman collections into one
+const fs = require('fs');
+const path = require('path');
+
+// Get collection file paths passed as arguments
+const collectionPaths = process.argv.slice(2);
+console.log(`Processing ${collectionPaths.length} collections`);
+
+// Create a new combined collection
+const combinedCollection = {
+  info: {
+    _postman_id: Date.now().toString(),
+    name: 'Gainz API',
+    description: 'Combined API collection for all Gainz microservices',
+    schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  item: [],
+  variable: [
+    {
+      key: "gatewayUrl",
+      value: "http://localhost:80",
+      type: "string"
+    }
+  ]
+};
+
+// Process each collection file
+collectionPaths.forEach(collectionPath => {
+  try {
+    console.log(`Processing ${collectionPath}`);
+    // Read the collection file
+    const collectionData = fs.readFileSync(collectionPath, 'utf8');
+    const collection = JSON.parse(collectionData);
+    
+    // Extract service name from filename
+    const filename = path.basename(collectionPath);
+    const serviceName = filename.replace('-postman-collection.json', '');
+    
+    // Create a folder for this service
+    const serviceFolder = {
+      name: serviceName.charAt(0).toUpperCase() + serviceName.slice(1) + ' API',
+      item: collection.item || []
+    };
+    
+    // Add the service folder to the combined collection
+    combinedCollection.item.push(serviceFolder);
+    
+    console.log(`Added collection: ${filename}`);
+  } catch (error) {
+    console.error(`Error processing collection ${collectionPath}: ${error.message}`);
+  }
+});
+
+// Write the combined collection to file
+const outputPath = '/app/docs/gainz-api-collection.json';
+fs.writeFileSync(outputPath, JSON.stringify(combinedCollection, null, 2));
+
+// Create a Postman environment file
+const environment = {
+  id: Date.now().toString() + '-env',
+  name: 'Gainz API Environment',
+  values: [
+    {
+      key: "gatewayUrl",
+      value: "http://localhost:80",
+      enabled: true
+    }
+  ],
+  _postman_variable_scope: "environment"
+};
+
+const envPath = '/app/docs/gainz-api-environment.json';
+fs.writeFileSync(envPath, JSON.stringify(environment, null, 2));
+
+console.log(`Combined collection created at ${outputPath}`);
+console.log(`Environment file created at ${envPath}`);
+EOF
+
+  # Find a running service container to execute the script
+  local ACTIVE_SERVICE=""
+  for service in "authentication" "authorization" "user" "image-upload"; do
+    if docker ps | grep -q "gainz-$service"; then
+      ACTIVE_SERVICE="$service"
+      break
+    fi
+  done
+  
+  if [ -z "$ACTIVE_SERVICE" ]; then
+    echo -e "${RED}No running service containers found. Start services with './gainz.sh dev' first.${NC}"
+    return 1
+  fi
+  
+  # Copy the script to the container
+  docker cp "$TEMP_JS_FILE" "gainz-$ACTIVE_SERVICE:/tmp/combine-collections.js"
+  
+  # Copy all collection files to the container
+  for coll in "${COLLECTIONS[@]}"; do
+    docker cp "$coll" "gainz-$ACTIVE_SERVICE:/app/docs/$(basename "$coll")"
+  done
+  
+  # Build the container paths for the collections
+  local CONTAINER_PATHS=""
+  for coll in "${COLLECTIONS[@]}"; do
+    CONTAINER_PATHS="$CONTAINER_PATHS /app/docs/$(basename "$coll")"
+  done
+  
+  # Run the script in the container
+  docker exec gainz-$ACTIVE_SERVICE node /tmp/combine-collections.js $CONTAINER_PATHS
+  
+  # Copy the generated files back
+  docker cp "gainz-$ACTIVE_SERVICE:/app/docs/gainz-api-collection.json" "$SCRIPT_DIR/docs/"
+  docker cp "gainz-$ACTIVE_SERVICE:/app/docs/gainz-api-environment.json" "$SCRIPT_DIR/docs/"
+  
+  # Clean up
+  docker exec gainz-$ACTIVE_SERVICE rm "/tmp/combine-collections.js"
+  rm -f "$TEMP_JS_FILE"
+  
+  echo -e "${GREEN}Combined Postman collection created at $OUTPUT_FILE${NC}"
+  echo -e "${GREEN}Environment file created at $SCRIPT_DIR/docs/gainz-api-environment.json${NC}"
+}
+
 # Main script logic
 case "$1" in
   dev)
@@ -786,7 +988,11 @@ case "$1" in
     generate_docs "$2"
     ;;
   postman)
-    generate_postman_collection "$2" "$3"
+    if [ "$2" = "--combined-only" ]; then
+      generate_postman_collection "" "" true
+    else
+      generate_postman_collection "$2" "$3" false
+    fi
     ;;
   test)
     run_tests

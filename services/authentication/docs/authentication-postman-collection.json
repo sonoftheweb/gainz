@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "1742699931464",
+    "_postman_id": "1742702195105",
     "name": "Gainz Authentication API",
     "description": "API documentation for the Gainz Authentication Service",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -20,9 +20,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
+              "raw": "{{gatewayUrl}}/api/auth/register",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
                 "api",
@@ -53,9 +53,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/register",
+                  "raw": "{{gatewayUrl}}/api/auth/register",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -92,9 +92,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/register",
+                  "raw": "{{gatewayUrl}}/api/auth/register",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -131,9 +131,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/register",
+                  "raw": "{{gatewayUrl}}/api/auth/register",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -172,9 +172,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
+              "raw": "{{gatewayUrl}}/api/auth/login",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
                 "api",
@@ -205,9 +205,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/login",
+                  "raw": "{{gatewayUrl}}/api/auth/login",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -244,9 +244,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/login",
+                  "raw": "{{gatewayUrl}}/api/auth/login",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -283,9 +283,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/login",
+                  "raw": "{{gatewayUrl}}/api/auth/login",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -324,9 +324,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/logout",
+              "raw": "{{gatewayUrl}}/api/auth/logout",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
                 "api",
@@ -357,9 +357,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/logout",
+                  "raw": "{{gatewayUrl}}/api/auth/logout",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -396,9 +396,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/logout",
+                  "raw": "{{gatewayUrl}}/api/auth/logout",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -435,9 +435,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/logout",
+                  "raw": "{{gatewayUrl}}/api/auth/logout",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -476,9 +476,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/refresh-token",
+              "raw": "{{gatewayUrl}}/api/auth/refresh-token",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
                 "api",
@@ -509,9 +509,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/refresh-token",
+                  "raw": "{{gatewayUrl}}/api/auth/refresh-token",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -548,9 +548,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/refresh-token",
+                  "raw": "{{gatewayUrl}}/api/auth/refresh-token",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -587,9 +587,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/refresh-token",
+                  "raw": "{{gatewayUrl}}/api/auth/refresh-token",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -626,9 +626,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/refresh-token",
+                  "raw": "{{gatewayUrl}}/api/auth/refresh-token",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -667,9 +667,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "raw": "{{gatewayUrl}}/api/auth/forgot-password",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
                 "api",
@@ -700,9 +700,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/forgot-password",
+                  "raw": "{{gatewayUrl}}/api/auth/forgot-password",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -739,9 +739,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/forgot-password",
+                  "raw": "{{gatewayUrl}}/api/auth/forgot-password",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -778,9 +778,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/forgot-password",
+                  "raw": "{{gatewayUrl}}/api/auth/forgot-password",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -819,9 +819,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "raw": "{{gatewayUrl}}/api/auth/reset-password",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
                 "api",
@@ -852,9 +852,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/reset-password",
+                  "raw": "{{gatewayUrl}}/api/auth/reset-password",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -891,9 +891,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/reset-password",
+                  "raw": "{{gatewayUrl}}/api/auth/reset-password",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -930,9 +930,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/reset-password",
+                  "raw": "{{gatewayUrl}}/api/auth/reset-password",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -971,9 +971,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/verify-email",
+              "raw": "{{gatewayUrl}}/api/auth/verify-email",
               "host": [
-                "{{baseUrl}}"
+                "{{gatewayUrl}}"
               ],
               "path": [
                 "api",
@@ -1004,9 +1004,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/verify-email",
+                  "raw": "{{gatewayUrl}}/api/auth/verify-email",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -1043,9 +1043,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/verify-email",
+                  "raw": "{{gatewayUrl}}/api/auth/verify-email",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -1082,9 +1082,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/verify-email",
+                  "raw": "{{gatewayUrl}}/api/auth/verify-email",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -1121,9 +1121,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/verify-email",
+                  "raw": "{{gatewayUrl}}/api/auth/verify-email",
                   "host": [
-                    "{{baseUrl}}"
+                    "{{gatewayUrl}}"
                   ],
                   "path": [
                     "api",
@@ -1156,8 +1156,8 @@
   ],
   "variable": [
     {
-      "key": "baseUrl",
-      "value": "http://localhost:3001",
+      "key": "gatewayUrl",
+      "value": "http://localhost:80",
       "type": "string"
     }
   ]

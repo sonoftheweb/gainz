@@ -10,10 +10,9 @@ import (
 
 // Config holds all configuration for the gateway
 type Config struct {
-	Port                 int
-	AuthServiceURL       string
-	AuthorizationServiceURL string
-	UserServiceURL       string
+	Port            int
+	ServicesConfig  *ServicesConfig
+	ServicesConfigPath string
 }
 
 // LoadConfig loads configuration from environment variables
@@ -30,11 +29,20 @@ func LoadConfig() *Config {
 		port = 80
 	}
 
+	configPath := getEnv("SERVICES_CONFIG_PATH", "")
+
+	// Load service configurations from YAML
+	servicesConfig, err := LoadServicesConfig(configPath)
+	if err != nil {
+		log.Printf("Error loading services config: %v", err)
+		log.Println("Gateway will start with no service routes configured")
+		servicesConfig = &ServicesConfig{Services: make(map[string]ServiceDefinition)}
+	}
+
 	return &Config{
-		Port:                 port,
-		AuthServiceURL:       getEnv("AUTH_SERVICE_URL", "http://authentication:3001"),
-		AuthorizationServiceURL: getEnv("AUTHORIZATION_SERVICE_URL", "http://authorization:3002"),
-		UserServiceURL:       getEnv("USER_SERVICE_URL", "http://user:3003"),
+		Port:               port,
+		ServicesConfig:     servicesConfig,
+		ServicesConfigPath: configPath,
 	}
 }
 
