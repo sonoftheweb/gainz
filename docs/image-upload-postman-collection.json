@@ -1,0 +1,571 @@
+{
+  "info": {
+    "_postman_id": "1742711570617",
+    "name": "Gainz Image-upload API",
+    "description": "API documentation for the Image Upload service of Gainz fitness social network",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Images",
+      "item": [
+        {
+          "name": "Upload an image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "images",
+                "api",
+                "images",
+                "upload"
+              ]
+            },
+            "description": "Upload an image file to the server, which will be stored in S3",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "description": "Image file to upload (JPEG, PNG, GIF, or WebP)"
+                },
+                {
+                  "key": "description",
+                  "type": "text",
+                  "src": [],
+                  "description": "Optional description for the image"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "multipart/form-data"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    "upload"
+                  ]
+                },
+                "description": "Upload an image file to the server, which will be stored in S3",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": [],
+                      "description": "Image file to upload (JPEG, PNG, GIF, or WebP)"
+                    },
+                    {
+                      "key": "description",
+                      "type": "text",
+                      "src": [],
+                      "description": "Optional description for the image"
+                    }
+                  ]
+                }
+              },
+              "status": "201",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"id\": \"string\",\n  \"url\": \"string\",\n  \"thumbnailUrl\": \"string\"\n}"
+            },
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "multipart/form-data"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    "upload"
+                  ]
+                },
+                "description": "Upload an image file to the server, which will be stored in S3",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": [],
+                      "description": "Image file to upload (JPEG, PNG, GIF, or WebP)"
+                    },
+                    {
+                      "key": "description",
+                      "type": "text",
+                      "src": [],
+                      "description": "Optional description for the image"
+                    }
+                  ]
+                }
+              },
+              "status": "400",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "multipart/form-data"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    "upload"
+                  ]
+                },
+                "description": "Upload an image file to the server, which will be stored in S3",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": [],
+                      "description": "Image file to upload (JPEG, PNG, GIF, or WebP)"
+                    },
+                    {
+                      "key": "description",
+                      "type": "text",
+                      "src": [],
+                      "description": "Optional description for the image"
+                    }
+                  ]
+                }
+              },
+              "status": "401",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            },
+            {
+              "name": "500 Internal Server Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "multipart/form-data"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    "upload"
+                  ]
+                },
+                "description": "Upload an image file to the server, which will be stored in S3",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": [],
+                      "description": "Image file to upload (JPEG, PNG, GIF, or WebP)"
+                    },
+                    {
+                      "key": "description",
+                      "type": "text",
+                      "src": [],
+                      "description": "Optional description for the image"
+                    }
+                  ]
+                }
+              },
+              "status": "500",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Get user images",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/images/api/images",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "images",
+                "api",
+                "images"
+              ]
+            },
+            "description": "Get list of images uploaded by the authenticated user"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images"
+                  ]
+                },
+                "description": "Get list of images uploaded by the authenticated user"
+              },
+              "status": "200",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": \"string\",\n    \"filename\": \"string\",\n    \"url\": \"string\",\n    \"thumbnailUrl\": \"string\",\n    \"createdAt\": \"string\"\n  }\n]"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images"
+                  ]
+                },
+                "description": "Get list of images uploaded by the authenticated user"
+              },
+              "status": "401",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            },
+            {
+              "name": "500 Internal Server Error",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images"
+                  ]
+                },
+                "description": "Get list of images uploaded by the authenticated user"
+              },
+              "status": "500",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Delete an image",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "images",
+                "api",
+                "images",
+                ":id"
+              ]
+            },
+            "description": "Delete an image uploaded by the authenticated user"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    ":id"
+                  ]
+                },
+                "description": "Delete an image uploaded by the authenticated user"
+              },
+              "status": "200",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    ":id"
+                  ]
+                },
+                "description": "Delete an image uploaded by the authenticated user"
+              },
+              "status": "401",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    ":id"
+                  ]
+                },
+                "description": "Delete an image uploaded by the authenticated user"
+              },
+              "status": "403",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    ":id"
+                  ]
+                },
+                "description": "Delete an image uploaded by the authenticated user"
+              },
+              "status": "404",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            },
+            {
+              "name": "500 Internal Server Error",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                  "host": [
+                    "{{gatewayUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "images",
+                    "api",
+                    "images",
+                    ":id"
+                  ]
+                },
+                "description": "Delete an image uploaded by the authenticated user"
+              },
+              "status": "500",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "gatewayUrl",
+      "value": "http://localhost:80",
+      "type": "string"
+    }
+  ]
+}
