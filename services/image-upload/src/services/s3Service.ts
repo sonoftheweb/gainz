@@ -9,20 +9,37 @@ import { Readable } from 'stream';
 import logger from '../utils/logger';
 
 class S3Service {
-  private s3Client: S3Client;
+  private s3ClientInternal: S3Client;
+  private s3ClientPublic: S3Client; // Separate client for public URL generation
   private bucket: string;
+  private internalEndpoint: string;
+  private publicEndpoint: string;
 
   constructor() {
     // Get S3 configuration from environment variables
-    const endpoint = process.env.S3_ENDPOINT || 'http://minio:9000';
+    this.internalEndpoint = process.env.S3_ENDPOINT || 'http://minio:9000';
+    // Replace 'minio' with 'localhost' for public-facing URLs
+    this.publicEndpoint = this.internalEndpoint.replace('minio', 'localhost');
+    
     const region = process.env.S3_REGION || 'us-east-1';
     const accessKey = process.env.S3_ACCESS_KEY || 'minioadmin';
     const secretKey = process.env.S3_SECRET_KEY || 'minioadmin';
     this.bucket = process.env.S3_BUCKET || 'gainz-images';
 
-    // Initialize S3 client
-    this.s3Client = new S3Client({
-      endpoint,
+    // Initialize S3 clients - one for internal operations, one for public URL generation
+    this.s3ClientInternal = new S3Client({
+      endpoint: this.internalEndpoint,
+      region,
+      credentials: {
+        accessKeyId: accessKey,
+        secretAccessKey: secretKey
+      },
+      forcePathStyle: true // Required for MinIO
+    });
+    
+    // Create a separate client for public URL generation
+    this.s3ClientPublic = new S3Client({
+      endpoint: this.publicEndpoint,
       region,
       credentials: {
         accessKeyId: accessKey,
@@ -31,7 +48,42 @@ class S3Service {
       forcePathStyle: true // Required for MinIO
     });
 
-    logger.info(`S3Service initialized with endpoint: ${endpoint}, bucket: ${this.bucket}`);
+    logger.info(`S3Service initialized with internal endpoint: ${this.internalEndpoint}, public endpoint: ${this.publicEndpoint}, bucket: ${this.bucket}`);
+  }
+  
+  /**
+   * Verify S3 connection and initialize bucket if needed
+   * @returns Promise that resolves when connection is verified
+   */
+  public async checkConnection(): Promise<void> {
+    return this.initializeBucket();
+  }
+  
+  /**
+   * Initialize the S3 bucket if it doesn't exist
+   * @private
+   */
+  private async initializeBucket(): Promise<void> {
+    try {
+      // Import here to avoid circular dependency
+      const { HeadBucketCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
+      
+      try {
+        // Check if bucket exists
+        await this.s3ClientInternal.send(new HeadBucketCommand({ Bucket: this.bucket }));
+        logger.info(`Bucket ${this.bucket} already exists`);
+      } catch (error: any) {
+        // If bucket doesn't exist, create it
+        if (error.name === 'NotFound' || error.name === 'NoSuchBucket') {
+          await this.s3ClientInternal.send(new CreateBucketCommand({ Bucket: this.bucket }));
+          logger.info(`Created bucket ${this.bucket}`);
+        } else {
+          throw error;
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to initialize bucket', { error, bucket: this.bucket });
+    }
   }
 
   /**
@@ -50,11 +102,10 @@ class S3Service {
         ContentType: contentType
       });
 
-      await this.s3Client.send(command);
+      await this.s3ClientInternal.send(command);
 
-      // Return the URL to the uploaded object
-      const endpoint = process.env.S3_ENDPOINT || 'http://minio:9000';
-      return `${endpoint}/${this.bucket}/${key}`;
+      // Return a signed URL to the uploaded object instead of a direct URL
+      return this.getSignedUrl(key, 604800); // 7 days expiration
     } catch (error) {
       logger.error('Failed to upload file to S3', { error, key });
       throw new Error('Failed to upload file');
@@ -74,7 +125,12 @@ class S3Service {
         Key: key
       });
 
-      return await getSignedUrl(this.s3Client, command, { expiresIn });
+      // Generate the signed URL using the public endpoint client directly
+      // This ensures the signature is calculated correctly for the hostname that will be used
+      const publicUrl = await getSignedUrl(this.s3ClientPublic, command, { expiresIn });
+      logger.debug(`Generated public URL: ${publicUrl}`);
+      
+      return publicUrl;
     } catch (error) {
       logger.error('Failed to generate signed URL', { error, key });
       throw new Error('Failed to generate signed URL');
@@ -92,7 +148,7 @@ class S3Service {
         Key: key
       });
 
-      await this.s3Client.send(command);
+      await this.s3ClientInternal.send(command);
       logger.info(`File deleted from S3`, { key });
     } catch (error) {
       logger.error('Failed to delete file from S3', { error, key });
@@ -100,19 +156,7 @@ class S3Service {
     }
   }
 
-  /**
-   * Initialize the bucket if it doesn't exist
-   */
-  async initializeBucket(): Promise<void> {
-    try {
-      // Check if bucket exists (implementation would go here)
-      // If not, create it
-      logger.info(`Bucket initialized: ${this.bucket}`);
-    } catch (error) {
-      logger.error('Failed to initialize bucket', { error, bucket: this.bucket });
-      throw new Error('Failed to initialize bucket');
-    }
-  }
+
 }
 
 export default new S3Service();

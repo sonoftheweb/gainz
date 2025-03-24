@@ -1,13 +1,10 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 import s3Service from '../services/s3Service';
 import logger from '../utils/logger';
-
-const prisma = new PrismaClient();
 
 // Configure multer for memory storage (files will be in buffer)
 const storage = multer.memoryStorage();
@@ -121,181 +118,36 @@ export const uploadImage = async (req: Request, res: Response) => {
       file.mimetype
     );
     
-    // Record in database
-    const image = await prisma.image.create({
-      data: {
-        filename: path.basename(file.originalname),
-        originalUrl,
-        thumbnailUrl,
-        mimeType: file.mimetype,
-        size: file.size,
-        userId
-      }
-    });
+    // Generate a unique ID for the image (timestamp + random string)
+    const imageId = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
     
     logger.info(`Image uploaded successfully`, { 
-      imageId: image.id,
+      imageId,
       userId,
       size: file.size
     });
     
     res.status(201).json({
-      id: image.id,
+      id: imageId,
       url: originalUrl,
       thumbnailUrl
     });
   } catch (error) {
-    logger.error('Failed to upload image', { error });
-    res.status(500).json({ message: 'Failed to upload image' });
+    // Enhanced error logging with full details
+    logger.error('Failed to upload image', { 
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        // Include the full error object for inspection
+        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
+      } : error 
+    });
+    
+    // Send a more informative error message if available
+    const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+    res.status(500).json({ message: 'Failed to upload image', error: errorMessage });
   }
 };
 
-/**
- * @swagger
- * /api/images:
- *   get:
- *     tags:
- *       - Images
- *     summary: Get user images
- *     description: Get list of images uploaded by the authenticated user
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of user images
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   filename:
- *                     type: string
- *                   url:
- *                     type: string
- *                   thumbnailUrl:
- *                     type: string
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-export const getUserImages = async (req: Request, res: Response) => {
-  try {
-    // Ensure user is authenticated
-    if (!req.user || !req.user.userId) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
 
-    const userId = req.user.userId;
-    
-    // Get user's images from database
-    const images = await prisma.image.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' }
-    });
-    
-    const formattedImages = images.map(image => ({
-      id: image.id,
-      filename: image.filename,
-      url: image.originalUrl,
-      thumbnailUrl: image.thumbnailUrl,
-      createdAt: image.createdAt
-    }));
-    
-    res.status(200).json(formattedImages);
-  } catch (error) {
-    logger.error('Failed to get user images', { error });
-    res.status(500).json({ message: 'Failed to get user images' });
-  }
-};
-
-/**
- * @swagger
- * /api/images/{id}:
- *   delete:
- *     tags:
- *       - Images
- *     summary: Delete an image
- *     description: Delete an image uploaded by the authenticated user
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the image to delete
- *     responses:
- *       200:
- *         description: Image deleted successfully
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - User doesn't own this image
- *       404:
- *         description: Image not found
- *       500:
- *         description: Server error
- */
-export const deleteImage = async (req: Request, res: Response) => {
-  try {
-    // Ensure user is authenticated
-    if (!req.user || !req.user.userId) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
-
-    const userId = req.user.userId;
-    const imageId = req.params.id;
-    
-    // Find the image
-    const image = await prisma.image.findUnique({
-      where: { id: imageId }
-    });
-    
-    // Check if image exists
-    if (!image) {
-      return res.status(404).json({ message: 'Image not found' });
-    }
-    
-    // Check if user owns the image
-    if (image.userId !== userId) {
-      return res.status(403).json({ message: 'You do not have permission to delete this image' });
-    }
-    
-    // Extract S3 keys from URLs
-    const getKeyFromUrl = (url: string) => {
-      const parts = url.split('/');
-      return `${parts[parts.length - 2]}/${parts[parts.length - 1]}`;
-    };
-    
-    // Delete from S3
-    try {
-      await s3Service.deleteFile(getKeyFromUrl(image.originalUrl));
-      if (image.thumbnailUrl) {
-        await s3Service.deleteFile(getKeyFromUrl(image.thumbnailUrl));
-      }
-    } catch (error) {
-      logger.error('Failed to delete image files from S3', { error, imageId });
-      // Continue with database deletion anyway
-    }
-    
-    // Delete from database
-    await prisma.image.delete({
-      where: { id: imageId }
-    });
-    
-    logger.info(`Image deleted successfully`, { imageId, userId });
-    res.status(200).json({ message: 'Image deleted successfully' });
-  } catch (error) {
-    logger.error('Failed to delete image', { error });
-    res.status(500).json({ message: 'Failed to delete image' });
-  }
-};

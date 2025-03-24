@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import imageRoutes from './routes/imageRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import { extractUserInfo } from './middleware/userInfoMiddleware';
 import swaggerSpec from './config/swagger';
 
 // Load environment variables
@@ -15,6 +16,9 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
+
+// Extract user info from the X-User-Info header (added by gateway when authenticated)
+app.use(extractUserInfo);
 
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

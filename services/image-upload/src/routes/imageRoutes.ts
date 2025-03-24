@@ -1,17 +1,14 @@
 import { Router } from 'express';
 import { 
   uploadImage, 
-  getUserImages, 
-  deleteImage,
   upload
 } from '../controllers/imageController';
-import { authenticate } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Image routes - all require authentication
-router.post('/upload', authenticate, upload.single('image'), uploadImage);
-router.get('/', authenticate, getUserImages);
-router.delete('/:id', authenticate, deleteImage);
+// Image routes - authentication is now handled by the gateway
+// The gateway passes user information via the X-User-Info header
+// This service is now completely stateless - it only handles image uploads
+router.post('/upload', upload.single('image'), uploadImage);
 
 export default router;

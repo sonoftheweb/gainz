@@ -12,8 +12,12 @@ import (
 
 // ServiceDefinition represents a single microservice configuration
 type ServiceDefinition struct {
-	URL    string `yaml:"url"`
-	Prefix string `yaml:"prefix"`
+	URL            string   `yaml:"url"`
+	Prefix         string   `yaml:"prefix"`
+	FullyProtected bool     `yaml:"fully_protected"` // All routes require authentication
+	ProtectedPaths []string `yaml:"protected_paths"` // Specific paths requiring authentication
+	PublicPaths    []string `yaml:"public_paths"`    // Specific paths not requiring authentication
+	Internal       bool     `yaml:"internal"`        // Service is used internally by the gateway
 }
 
 // ServicesConfig holds all microservice configurations

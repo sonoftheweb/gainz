@@ -7,6 +7,16 @@ services:
     url: http://authentication:3001
     # Path prefix for authentication-related endpoints
     prefix: /api/auth
+    # Define which auth paths require authentication
+    protected_paths:
+      - /logout
+      - /refresh
+      - /me
+    # Paths that don't require authentication
+    public_paths:
+      - /login
+      - /register
+      - /verify-email
     
   # Authorization Service
   authorization:
@@ -14,6 +24,8 @@ services:
     url: http://authorization:3002
     # Path prefix for authorization-related endpoints
     prefix: /api/authorize
+    # This service is used internally by the gateway for token validation
+    internal: true
     
   # User Service
   user:
@@ -21,3 +33,14 @@ services:
     url: http://user:3003
     # Path prefix for user-related endpoints
     prefix: /api/users
+    # All routes require authentication
+    fully_protected: true
+    
+  # Image Upload Service
+  image-upload:
+    # Base URL of the image upload service
+    url: http://image-upload:3004
+    # Path prefix for image-related endpoints
+    prefix: /api/images
+    # All routes require authentication
+    fully_protected: true

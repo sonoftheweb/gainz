@@ -398,7 +398,12 @@ function getGatewayPath(serviceName, path) {
     case 'user':
       return '/api/users' + path;
     case 'image-upload':
-      return '/api/images' + path;
+      // Check if path already includes /api/images to avoid duplication
+      if (path.startsWith('/api/images')) {
+        return path;
+      } else {
+        return '/api/images' + path;
+      }
     default:
       return '/api/' + serviceName + path;
   }

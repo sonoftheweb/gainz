@@ -8,7 +8,10 @@ export const validateToken = async (req: Request, res: Response) => {
     const { token } = req.body;
 
     if (!token) {
-      return res.status(401).json({ message: 'Token is required' });
+      return res.status(401).json({ 
+        valid: false, 
+        error: 'Token is required' 
+      });
     }
 
     try {
@@ -21,22 +24,37 @@ export const validateToken = async (req: Request, res: Response) => {
       });
 
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ 
+          valid: false, 
+          error: 'User not found' 
+        });
       }
 
       // Return user info (excluding sensitive data)
       const { refreshToken, ...userWithoutToken } = user;
       
+      // Return standardized response format for the gateway
       res.status(200).json({
+        valid: true,
         message: 'Token is valid',
-        user: userWithoutToken
+        user: {
+          ...userWithoutToken,
+          // Ensure userId is provided (aliases id if needed)
+          userId: userWithoutToken.id 
+        }
       });
     } catch (error) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
+      return res.status(401).json({ 
+        valid: false, 
+        error: 'Invalid or expired token' 
+      });
     }
   } catch (error) {
     console.error('Token validation error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      valid: false, 
+      error: 'Server error' 
+    });
   }
 };
 // Test comment Mon Mar  3 00:25:32 AST 2025

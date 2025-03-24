@@ -34,8 +34,9 @@ export const authenticate = async (
     const authServiceUrl = process.env.AUTHORIZATION_SERVICE_URL || 'http://authorization:3002';
     
     try {
-      // Call authorization service to validate token
-      const response = await axios.post(`${authServiceUrl}/api/authorize/validate`, {
+      // Call authorization service to validate token directly (service-to-service)
+      // Note: When services communicate directly, they use the actual endpoint paths, not the gateway paths
+      const response = await axios.post(`${authServiceUrl}/validate`, {
         token: token
       });
       

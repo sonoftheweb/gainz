@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { initializeGrpcServer } from './services/grpcServer';
 import userRoutes from './routes/userRoutes';
-import { authMiddleware } from './middleware/authMiddleware';
+import { extractUserInfo } from './middleware/userInfoMiddleware';
 
 // Load environment variables
 dotenv.config();
@@ -15,8 +15,11 @@ const port = process.env.PORT || 3003;
 app.use(express.json());
 app.use(cors());
 
+// Extract user info from the X-User-Info header (set by gateway)
+app.use(extractUserInfo);
+
 // Routes
-app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

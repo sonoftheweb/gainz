@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "1742711570824",
+    "_postman_id": "1742743405538",
     "name": "Gainz API",
     "description": "Combined API collection for all Gainz microservices",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -1175,13 +1175,11 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                  "raw": "{{gatewayUrl}}/api/images/upload",
                   "host": [
                     "{{gatewayUrl}}"
                   ],
                   "path": [
-                    "api",
-                    "images",
                     "api",
                     "images",
                     "upload"
@@ -1218,13 +1216,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                      "raw": "{{gatewayUrl}}/api/images/upload",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         "upload"
@@ -1267,13 +1263,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                      "raw": "{{gatewayUrl}}/api/images/upload",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         "upload"
@@ -1316,13 +1310,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                      "raw": "{{gatewayUrl}}/api/images/upload",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         "upload"
@@ -1365,13 +1357,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/upload",
+                      "raw": "{{gatewayUrl}}/api/images/upload",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         "upload"
@@ -1416,13 +1406,11 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{gatewayUrl}}/api/images/api/images",
+                  "raw": "{{gatewayUrl}}/api/images",
                   "host": [
                     "{{gatewayUrl}}"
                   ],
                   "path": [
-                    "api",
-                    "images",
                     "api",
                     "images"
                   ]
@@ -1441,13 +1429,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images",
+                      "raw": "{{gatewayUrl}}/api/images",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images"
                       ]
@@ -1472,13 +1458,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images",
+                      "raw": "{{gatewayUrl}}/api/images",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images"
                       ]
@@ -1503,13 +1487,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images",
+                      "raw": "{{gatewayUrl}}/api/images",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images"
                       ]
@@ -1536,13 +1518,11 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                  "raw": "{{gatewayUrl}}/api/images/:id",
                   "host": [
                     "{{gatewayUrl}}"
                   ],
                   "path": [
-                    "api",
-                    "images",
                     "api",
                     "images",
                     ":id"
@@ -1562,13 +1542,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                      "raw": "{{gatewayUrl}}/api/images/:id",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         ":id"
@@ -1594,13 +1572,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                      "raw": "{{gatewayUrl}}/api/images/:id",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         ":id"
@@ -1626,13 +1602,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                      "raw": "{{gatewayUrl}}/api/images/:id",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         ":id"
@@ -1658,13 +1632,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                      "raw": "{{gatewayUrl}}/api/images/:id",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         ":id"
@@ -1690,13 +1662,11 @@
                       }
                     ],
                     "url": {
-                      "raw": "{{gatewayUrl}}/api/images/api/images/:id",
+                      "raw": "{{gatewayUrl}}/api/images/:id",
                       "host": [
                         "{{gatewayUrl}}"
                       ],
                       "path": [
-                        "api",
-                        "images",
                         "api",
                         "images",
                         ":id"

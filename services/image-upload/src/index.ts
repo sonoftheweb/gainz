@@ -1,13 +1,10 @@
 import app from './app';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
 import logger from './utils/logger';
+import s3Service from './services/s3Service';
 
 // Ensure environment variables are loaded
 dotenv.config();
-
-// Initialize Prisma
-const prisma = new PrismaClient();
 
 // Get port from environment or use default
 const PORT = process.env.PORT || 3004;
@@ -15,9 +12,8 @@ const PORT = process.env.PORT || 3004;
 // Start the server
 const server = app.listen(PORT, async () => {
   try {
-    // Test database connection
-    await prisma.$connect();
-    logger.info(`💾 Database connection successful`);
+    // Initialize S3 service and verify bucket exists
+    await s3Service.checkConnection();
     
     logger.info(`🖼️ Image Upload Service running on port ${PORT}`);
     logger.info(`📚 API documentation available at http://localhost:${PORT}/api-docs`);
@@ -31,15 +27,9 @@ const server = app.listen(PORT, async () => {
 const shutdown = async () => {
   logger.info('Shutting down server...');
   
-  server.close(async () => {
-    try {
-      await prisma.$disconnect();
-      logger.info('Database connection closed');
-      process.exit(0);
-    } catch (error) {
-      logger.error('Error during shutdown', { error });
-      process.exit(1);
-    }
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
   });
 };
 
