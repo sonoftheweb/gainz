@@ -1,3 +1,14 @@
+// Transform user data for API responses
+export const transformUser = (user: any) => {
+  return {
+    id: user.id,
+    email: user.email,
+    onboardingStatus: user.onboardingStatus || 'NOT_STARTED',
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt
+  };
+};
+
 // Transform profile data for API responses
 export const transformProfile = (profile: any) => {
   return {
@@ -10,6 +21,7 @@ export const transformProfile = (profile: any) => {
       : profile.firstName || profile.lastName || '',
     bio: profile.bio || '',
     profilePicture: profile.profilePicture || '',
+    phoneNumber: profile.phoneNumber || '',
     dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.toISOString() : null,
     gender: profile.gender || '',
     weight: profile.weight || null,

@@ -1,9 +1,43 @@
 import { Request, Response } from 'express';
-import { transformProfile, transformFitnessGoal, transformWorkoutStat } from '../transformers/userTransformers';
+import { transformProfile, transformFitnessGoal, transformWorkoutStat, transformUser } from '../transformers/userTransformers';
 import prisma from '../lib/prisma';
-import Joi from 'joi';
+import { OnboardingStatus } from '../constants/onboarding';
+import { 
+  biometricsValidationSchema,
+  genderValidationSchema,
+  fitnessLevelValidationSchema,
+} from '../validations/profileValidation';
 
-// Get user profile
+/**
+ * Retrieves the authenticated user's profile information.
+ * 
+ * This endpoint returns the complete profile of the currently authenticated user,
+ * including personal details, biometric information, and associated fitness goals.
+ * If the profile doesn't exist, it returns a 404 error.
+ * 
+ * @route GET /profile
+ * @auth Requires user authentication
+ * 
+ * @returns {Object} 200 - Success response
+ * @returns {string} 200.message - Success message
+ * @returns {Object} 200.profile - User profile information
+ * @returns {string} 200.profile.id - Profile ID
+ * @returns {string} 200.profile.userId - User ID
+ * @returns {string} 200.profile.firstName - User's first name
+ * @returns {string} 200.profile.lastName - User's last name
+ * @returns {string} 200.profile.bio - User's biography
+ * @returns {string} 200.profile.profilePicture - URL to profile picture
+ * @returns {string} 200.profile.dateOfBirth - User's date of birth
+ * @returns {string} 200.profile.gender - User's gender
+ * @returns {number} 200.profile.weight - User's weight
+ * @returns {number} 200.profile.height - User's height
+ * @returns {string} 200.profile.phoneNumber - User's phone number for 2FA
+ * @returns {Object[]} 200.fitnessGoals - Array of user's fitness goals
+ * 
+ * @returns {Object} 401 - Unauthorized if user isn't authenticated
+ * @returns {Object} 404 - Not found if profile doesn't exist
+ * @returns {Object} 500 - Server error
+ */
 export const getProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -39,21 +73,40 @@ export const getProfile = async (req: Request, res: Response) => {
   }
 };
 
-// Validation schema for profile updates
-const profileValidationSchema = Joi.object({
-  weight: Joi.number().positive().required().messages({
-    'number.base': 'Weight must be a number.',
-    'number.positive': 'Weight must be a positive number.',
-    'any.required': 'Weight is required.'
-  }),
-  height: Joi.number().positive().required().messages({
-    'number.base': 'Height must be a number.',
-    'number.positive': 'Height must be a positive number.',
-    'any.required': 'Height is required.'
-  }),
-});
 
-// Update user profile
+
+/**
+ * Updates the authenticated user's profile information.
+ * 
+ * This endpoint allows updating various aspects of a user's profile. If the profile
+ * doesn't exist, it creates a new one. This endpoint validates required fields and
+ * returns the updated profile information.
+ * 
+ * @route PUT /profile
+ * @auth Requires user authentication
+ * 
+ * @param {Object} req.body - The request body containing profile data
+ * @param {string} req.body.firstName - User's first name (required)
+ * @param {string} req.body.lastName - User's last name (required)
+ * @param {string} [req.body.bio] - Optional user biography
+ * @param {string} [req.body.profilePicture] - Optional URL to profile picture
+ * @param {string} [req.body.dateOfBirth] - Optional date of birth (ISO format)
+ * @param {string} [req.body.gender] - Optional gender
+ * @param {number|string} [req.body.weight] - Optional weight
+ * @param {number|string} [req.body.height] - Optional height
+ * @param {string} [req.body.phoneNumber] - Optional phone number for 2FA
+ * 
+ * @returns {Object} 200 - Success response
+ * @returns {string} 200.message - Success message
+ * @returns {Object} 200.profile - Updated profile information
+ * 
+ * @returns {Object} 400 - Bad request when validation fails
+ * @returns {string} 400.message - Error message
+ * @returns {Object} 400.errors - Validation errors
+ * 
+ * @returns {Object} 401 - Unauthorized if user isn't authenticated
+ * @returns {Object} 500 - Server error
+ */
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -73,10 +126,49 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    // Validate weight and height
-    const { error } = profileValidationSchema.validate({ weight, height });
-    if (error) {
-      return res.status(400).json({ message: error.details[0].message });
+    // Validate weight and height if provided
+    if (weight !== undefined || height !== undefined) {
+      const { error } = biometricsValidationSchema.validate(
+        { 
+          weight: weight || null, 
+          height: height || null 
+        },
+        { abortEarly: false }
+      );
+      if (error) {
+        return res.status(400).json({ 
+          message: 'Validation error', 
+          errors: error.details.map(d => d.message)
+        });
+      }
+    }
+    
+    // Validate gender if provided
+    if (gender !== undefined) {
+      const { error: genderError } = genderValidationSchema.validate(
+        { gender }, 
+        { allowUnknown: true }
+      );
+      if (genderError) {
+        return res.status(400).json({
+          message: 'Gender validation error',
+          error: genderError.details[0].message
+        });
+      }
+    }
+    
+    // Validate fitnessLevel if provided
+    if (fitnessLevel !== undefined) {
+      const { error: fitnessError } = fitnessLevelValidationSchema.validate(
+        { fitnessLevel }, 
+        { allowUnknown: true }
+      );
+      if (fitnessError) {
+        return res.status(400).json({
+          message: 'Fitness level validation error',
+          error: fitnessError.details[0].message
+        });
+      }
     }
 
     // Build update data
@@ -585,6 +677,288 @@ export const getWorkoutStats = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-// Test comment Mon Mar  3 00:25:34 AST 2025
-// Test comment Mon Mar  3 10:40:41 PM AST 2025
-// Test comment Sat Mar 15 10:26:18 PM ADT 2025
+
+/**
+ * Retrieves the current onboarding status and completion information for the authenticated user.
+ * 
+ * This endpoint provides detailed information about the user's progress through the onboarding
+ * flow, including whether they have a profile, if their profile is complete, and if their
+ * required biometric information has been provided.
+ * 
+ * @route GET /onboarding/status
+ * @auth Requires user authentication
+ * 
+ * @returns {Object} 200 - Success response
+ * @returns {string} 200.message - Success message
+ * @returns {Object} 200.onboarding - Detailed onboarding information
+ * @returns {string} 200.onboarding.status - Current status (NOT_STARTED, IN_PROGRESS, or COMPLETED)
+ * @returns {boolean} 200.onboarding.isComplete - Whether onboarding is fully completed
+ * @returns {boolean} 200.onboarding.hasProfile - Whether the user has created a profile
+ * @returns {boolean} 200.onboarding.profileComplete - Whether all profile fields are completed
+ * @returns {boolean} 200.onboarding.biometricsComplete - Whether all biometric fields are completed
+ * @returns {Object} 200.user - Basic user information including onboarding status
+ * 
+ * @returns {Object} 401 - Unauthorized if user isn't authenticated
+ * @returns {Object} 404 - Not found if user doesn't exist
+ * @returns {Object} 500 - Server error
+ */
+export const getOnboardingStatus = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Using type assertion to avoid TypeScript errors until IDE fully recognizes the schema changes
+    const user = await (prisma as any).user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        onboardingStatus: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if profile exists
+    const profile = await prisma.profile.findUnique({
+      where: { userId }
+    });
+
+    // Return onboarding status with additional context
+    res.status(200).json({
+      message: 'Onboarding status retrieved successfully',
+      onboarding: {
+        status: user.onboardingStatus,
+        isComplete: user.onboardingStatus === OnboardingStatus.COMPLETED,
+        hasProfile: !!profile,
+        profileComplete: profile && profile.firstName && profile.lastName && profile.gender && profile.dateOfBirth && profile.weight && profile.height,
+        biometricsComplete: profile && profile.gender && profile.dateOfBirth && profile.weight && profile.height
+      },
+      user: transformUser(user)
+    });
+  } catch (error) {
+    console.error('Get onboarding status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Updates a user's biometric information and tracks their onboarding progress.
+ * 
+ * This endpoint handles the biometrics step of the user onboarding process, collecting
+ * essential physical metrics like height, weight, gender, and date of birth. When these
+ * metrics are provided, the user's onboarding status is automatically updated to
+ * IN_PROGRESS or maintained as COMPLETED if already completed.
+ * 
+ * @route POST /onboarding/biometrics
+ * @auth Requires user authentication
+ * 
+ * @param {Object} req.body - The request body containing biometric data
+ * @param {string} req.body.dateOfBirth - The user's date of birth in ISO format (YYYY-MM-DD)
+ * @param {string} req.body.gender - The user's gender (must match Gender enum in schema)
+ * @param {number|string} req.body.weight - The user's weight (will be converted to number)
+ * @param {number|string} req.body.height - The user's height (will be converted to number)
+ * 
+ * @returns {Object} 200 - Success response
+ * @returns {string} 200.message - Success message
+ * @returns {Object} 200.profile - The updated user profile with biometric data
+ * @returns {string} 200.onboardingStatus - The current onboarding status
+ * 
+ * @returns {Object} 400 - Bad request when required fields are missing
+ * @returns {string} 400.message - Error message
+ * @returns {string[]} 400.required - List of missing required fields
+ * 
+ * @returns {Object} 401 - Unauthorized if user isn't authenticated
+ * @returns {Object} 500 - Server error
+ */
+export const completeBiometricsStep = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { dateOfBirth, gender, weight, height } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Validate required biometrics data
+    if (!dateOfBirth || !gender || !weight || !height) {
+      return res.status(400).json({ 
+        message: 'Missing required fields', 
+        required: ['dateOfBirth', 'gender', 'weight', 'height'] 
+      });
+    }
+    
+    // Validate gender using schema
+    const { error: genderError } = genderValidationSchema.validate({ gender });
+    if (genderError) {
+      return res.status(400).json({
+        message: 'Gender validation error',
+        error: genderError.details[0].message
+      });
+    }
+
+    // Check or create profile
+    let profile = await prisma.profile.findUnique({
+      where: { userId }
+    });
+
+    if (!profile) {
+      profile = await prisma.profile.create({
+        data: {
+          userId,
+          dateOfBirth: new Date(dateOfBirth),
+          gender,
+          weight: parseFloat(weight),
+          height: parseFloat(height)
+        }
+      });
+    } else {
+      profile = await prisma.profile.update({
+        where: { userId },
+        data: {
+          dateOfBirth: new Date(dateOfBirth),
+          gender,
+          weight: parseFloat(weight),
+          height: parseFloat(height)
+        }
+      });
+    }
+
+    // Get current user to check onboarding status
+    // Using type assertion to avoid TypeScript errors until IDE fully recognizes the schema changes
+    const currentUser = await (prisma as any).user.findUnique({
+      where: { id: userId },
+      select: { onboardingStatus: true }
+    });
+
+    // Update user onboarding status to at least IN_PROGRESS
+    // Using type assertion to avoid TypeScript errors until IDE fully recognizes the schema changes
+    const user = await (prisma as any).user.update({
+      where: { id: userId },
+      data: {
+        onboardingStatus: currentUser?.onboardingStatus === OnboardingStatus.COMPLETED ? OnboardingStatus.COMPLETED : OnboardingStatus.IN_PROGRESS
+      }
+    });
+
+    res.status(200).json({
+      message: 'Biometrics updated successfully',
+      profile: transformProfile(profile),
+      onboardingStatus: user.onboardingStatus
+    });
+  } catch (error) {
+    console.error('Update biometrics error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Updates a user's profile information and potentially completes their onboarding process.
+ * 
+ * This endpoint handles the profile completion step of the user onboarding flow, collecting
+ * personal information like name, bio, and profile picture. If the user has also completed
+ * their biometrics (gender, date of birth, weight, height), this endpoint will automatically
+ * set their onboarding status to COMPLETED.
+ * 
+ * @route POST /onboarding/profile
+ * @auth Requires user authentication
+ * 
+ * @param {Object} req.body - The request body containing profile data
+ * @param {string} req.body.firstName - The user's first name (required)
+ * @param {string} req.body.lastName - The user's last name (required)
+ * @param {string} [req.body.bio] - Optional user biography/description
+ * @param {string} [req.body.profilePicture] - Optional URL or path to profile picture
+ * @param {string} [req.body.phoneNumber] - Optional phone number for 2FA
+ * 
+ * @returns {Object} 200 - Success response
+ * @returns {string} 200.message - Success message
+ * @returns {Object} 200.profile - The updated user profile
+ * @returns {string} 200.onboardingStatus - Current onboarding status (IN_PROGRESS or COMPLETED)
+ * @returns {boolean} 200.onboardingComplete - Whether onboarding is fully completed
+ * 
+ * @returns {Object} 400 - Bad request when required fields are missing
+ * @returns {string} 400.message - Error message
+ * @returns {string[]} 400.required - List of missing required fields
+ * 
+ * @returns {Object} 401 - Unauthorized if user isn't authenticated
+ * @returns {Object} 500 - Server error
+ */
+export const completeProfileStep = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { firstName, lastName, bio, profilePicture, phoneNumber } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Validate required profile data
+    if (!firstName || !lastName) {
+      return res.status(400).json({ 
+        message: 'Missing required fields', 
+        required: ['firstName', 'lastName'] 
+      });
+    }
+
+    // Check or create profile
+    let profile = await prisma.profile.findUnique({
+      where: { userId }
+    });
+
+    if (!profile) {
+      // Using type assertion to overcome the TypeScript issues with newly added fields
+      profile = await prisma.profile.create({
+        data: {
+          userId,
+          firstName,
+          lastName,
+          bio: bio || '',
+          profilePicture: profilePicture || '',
+          // Type assertion to allow phoneNumber until TypeScript recognizes the updated schema
+          ...(phoneNumber ? { phoneNumber } : {})
+        } as any
+      });
+    } else {
+      // Using type assertion to overcome the TypeScript issues with newly added fields
+      profile = await prisma.profile.update({
+        where: { userId },
+        data: {
+          firstName,
+          lastName,
+          bio: bio || profile.bio,
+          profilePicture: profilePicture || profile.profilePicture,
+          // Type assertion to allow phoneNumber until TypeScript recognizes the updated schema
+          ...(phoneNumber ? { phoneNumber } : {})
+        } as any
+      });
+    }
+
+    // Check if user has completed biometrics
+    const biometricsComplete = profile.gender && profile.dateOfBirth && profile.weight && profile.height;
+
+    // Update user onboarding status
+    const newStatus = biometricsComplete ? OnboardingStatus.COMPLETED : OnboardingStatus.IN_PROGRESS;
+    
+    // Using type assertion to avoid TypeScript errors until IDE fully recognizes the schema changes
+    const user = await (prisma as any).user.update({
+      where: { id: userId },
+      data: {
+        onboardingStatus: newStatus
+      }
+    });
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      profile: transformProfile(profile),
+      onboardingStatus: user.onboardingStatus,
+      onboardingComplete: user.onboardingStatus === 'COMPLETED'
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

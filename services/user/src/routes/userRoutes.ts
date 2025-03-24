@@ -11,7 +11,10 @@ import {
   deleteFitnessGoal,
   getFitnessGoals,
   addWorkoutStat,
-  getWorkoutStats
+  getWorkoutStats,
+  getOnboardingStatus,
+  completeBiometricsStep,
+  completeProfileStep
 } from '../controllers/userController';
 
 const router = Router();
@@ -35,5 +38,10 @@ router.delete('/goals/:goalId', deleteFitnessGoal);
 // Workout stats routes
 router.get('/stats', getWorkoutStats);
 router.post('/stats', addWorkoutStat);
+
+// Onboarding routes
+router.get('/onboarding/status', getOnboardingStatus);
+router.post('/onboarding/biometrics', completeBiometricsStep);
+router.post('/onboarding/profile', completeProfileStep);
 
 export default router;

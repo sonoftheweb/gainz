@@ -27,6 +27,13 @@ enum Gender {
   OTHER
 }
 
+// Enum for onboarding status
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
 // User model
 model User {
   id                String    @id @default(uuid())
@@ -35,6 +42,7 @@ model User {
   refreshToken      String?
   resetPasswordToken String?
   resetPasswordExpiry DateTime?
+  onboardingStatus  OnboardingStatus @default(NOT_STARTED)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -55,6 +63,7 @@ model Profile {
   lastName       String?
   bio            String?
   profilePicture String?
+  phoneNumber    String?   // For 2FA
   dateOfBirth    DateTime?
   gender         Gender?
   weight         Float?   // in kg

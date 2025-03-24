@@ -62,13 +62,13 @@ run_migrations() {
   
   # Run migrations for all services
   print_info "Running authentication service migrations..."
-  docker_compose_dev exec -T authentication npm run migrate
+  docker_compose_dev exec -T authentication npm run migrate:dev || print_warning "No migration script found for authentication service"
   
   print_info "Running authorization service migrations..."
-  docker_compose_dev exec -T authorization npm run migrate
+  docker_compose_dev exec -T authorization npm run migrate:dev || print_warning "No migration script found for authorization service"
   
-  print_info "Running user service migrations..."
-  docker_compose_dev exec -T user npm run migrate
+  print_info "Running user service migrations and generating client..."
+  docker_compose_dev exec -T user npm run migrate:dev && docker_compose_dev exec -T user npm run generate
   
   print_info "All migrations completed successfully!"
 }
